@@ -1,0 +1,14 @@
+{
+  "name": "ScaleCompiler — Hub valutazioni",
+  "short_name": "ScaleCompiler",
+  "description": "Somministrazione, scoring e monitoraggio di scale e questionari psicologici. Dati solo sul dispositivo.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0e7a5b",
+  "lang": "it",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

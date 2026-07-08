@@ -110,7 +110,7 @@ function Form({ test, patientId, patientCode, existing }: {
             <span className="muted small"> — {answered}/{total} risposte</span>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span className="small muted">Tasti <kbd>0</kbd>–<kbd>9</kbd> rispondono, <kbd>↑</kbd><kbd>↓</kbd> navigano</span>
+            <span className="small muted kbd-hint">Tasti <kbd>0</kbd>–<kbd>9</kbd> rispondono, <kbd>↑</kbd><kbd>↓</kbd> navigano</span>
             <button className="btn-secondary btn-sm" onClick={() => setMode(m => m === 'griglia' ? 'guidata' : 'griglia')}>
               {mode === 'griglia' ? 'Modalità paziente (guidata)' : 'Modalità clinico (griglia)'}
             </button>
