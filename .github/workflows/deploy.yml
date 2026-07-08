@@ -23,6 +23,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # Imposta la sorgente di Pages su "GitHub Actions" (build_type=workflow).
+      # enablement:true la abilita/commuta se il repo è ancora su "Deploy from a branch".
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
