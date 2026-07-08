@@ -110,6 +110,9 @@ export const audit: TestDefinition = {
     { min: 16, max: 19, label: 'Consumo dannoso — counseling e monitoraggio', severity: 2 },
     { min: 20, max: 40, label: 'Possibile dipendenza — invio specialistico', severity: 3 },
   ] }],
+  info: `SCORING: item 1-8 su 0-4; item 9-10 su 0/2/4. Totale 0-40.
+INTERPRETAZIONE (OMS): 0-7 basso rischio; 8-15 consumo a rischio → consiglio breve; 16-19 consumo dannoso → counseling e monitoraggio; ≥20 possibile dipendenza → invio specialistico. Soglia ≥7 suggerita per donne e over 65.
+SOTTODOMINI UTILI IN COLLOQUIO: item 1-3 consumo (AUDIT-C), 4-6 dipendenza, 7-10 conseguenze.`,
   notes: 'Cutoff standard ≥8 (alcune linee guida: ≥7 per donne e over 65).',
 };
 
@@ -363,6 +366,10 @@ export const asq: TestDefinition = {
       { min: 1, max: 1, label: 'ACUTO — valutazione di sicurezza immediata', severity: 3 },
     ] },
   ],
+  info: `PROCEDURA ASQ (NIMH): somministrare gli item 1-4; se tutti "No" → screening negativo, stop. Se almeno un "Sì" → porre l'item 5 ("adesso?").
+ITEM 5 SÌ = screening positivo ACUTO: il paziente non lascia il servizio senza valutazione completa di sicurezza immediata (mezzi, piano, supervisione).
+ITEM 5 NO = positivo non acuto: valutazione breve del rischio (es. BSSA) per decidere il percorso.
+Documentare sempre l'esito e il piano di sicurezza condiviso.`,
   notes: 'Qualsiasi «Sì» agli item 1-4 = screening positivo: somministrare l’item 5 e procedere secondo il percorso ASQ (valutazione breve del rischio; se item 5 positivo, presa in carico immediata e messa in sicurezza).',
 };
 

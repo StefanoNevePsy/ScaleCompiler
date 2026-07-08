@@ -81,6 +81,9 @@ export const ecrR: TestDefinition = {
       { min: 1, max: 2.99, label: 'Basso', severity: 0 }, { min: 3, max: 4.99, label: 'Medio', severity: 1 }, { min: 5, max: 7, label: 'Alto', severity: 2 },
     ] },
   ],
+  info: `SCORING: media per dimensione (1-7). Ansia = item 1-18 (invertiti 9, 11); Evitamento = item 19-36 (invertiti 20, 22, 26-31, 33-36).
+INTERPRETAZIONE: le due dimensioni collocano nel piano dell'attaccamento adulto — Ansia bassa + Evitamento basso = sicuro; Ansia alta + Evitamento basso = preoccupato; Ansia bassa + Evitamento alto = distanziante/evitante; entrambi alti = timoroso. Non esistono cutoff clinici: usare medie campionarie (≈3-3.5) come riferimento e valutare il profilo nel colloquio.
+USO: riferito alle relazioni sentimentali in generale, non solo alla relazione attuale.`,
   notes: 'Le fasce sono descrittive (non cutoff clinici): l’interpretazione classica colloca il profilo nel piano Ansia × Evitamento (basso/basso = sicuro; alta ansia = preoccupato; alto evitamento = distanziante; alti entrambi = timoroso). Item invertiti: 9, 11, 20, 22, 26-31, 33-36 — chiave e testi DA VERIFICARE sulla versione italiana validata (es. Busonera et al.).',
 };
 

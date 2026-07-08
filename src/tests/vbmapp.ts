@@ -99,5 +99,10 @@ export const vbmapp: TestDefinition = {
     { id: 'barriere-tot', name: 'Barriere — Totale (0-96)', items: BARRIERS.map((_, i) => `bar-${i + 1}`), compute: 'sum' },
     { id: 'transizione-tot', name: 'Transizione — Totale (18-90)', items: TRANSITIONS.map((_, i) => `tr-${i + 1}`), compute: 'sum' },
   ],
+  info: `USO DELLA GRIGLIA: ogni traguardo si valuta 0, ½ o 1 secondo i criteri del protocollo ufficiale (osservazione diretta, test formale o entrambi, come specificato per ciascun traguardo).
+LETTURA: il profilo per livello orienta la collocazione evolutiva (L1 0-18m, L2 18-30m, L3 30-48m) e la selezione degli obiettivi IEP: in genere si insegnano le abilità ai livelli con punteggi parziali, dominio per dominio.
+BARRIERE: punteggi ≥2 indicano barriere che richiedono analisi funzionale e intervento specifico prima/insieme all'insegnamento.
+TRANSIZIONE: orienta il tipo di contesto educativo (rapporto 1:1 vs piccolo gruppo vs classe).
+RIPETIZIONE: somministrazioni successive (= colonne colorate del cartaceo) si confrontano nella vista Andamento.`,
   notes: 'Griglia di scoring: compilare seguendo i criteri del protocollo ufficiale VB-MAPP (Milestones/Barriers/Transition). Le somministrazioni ripetute (colonne colorate del protocollo cartaceo) corrispondono qui a somministrazioni successive, confrontabili nella vista Andamento. Per aggiungere i testi integrali dei traguardi dal proprio protocollo usare l’editor o "Importa da manuale (IA)". Sezioni EESA (ecoico) e analisi per dominio: fare riferimento al protocollo.',
 };

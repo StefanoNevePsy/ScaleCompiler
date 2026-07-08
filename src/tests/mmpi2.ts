@@ -64,10 +64,54 @@ const scales: Scale[] = [
   }),
 ];
 
-// applica le fasce T standard dove ha senso clinicamente
+// fasce interpretative per le scale di validità (T lineari USA — indicative)
+const VALIDITY_BANDS: Record<string, NonNullable<Scale['bands']>> = {
+  F: [
+    { min: 0, max: 64, label: 'Nella norma', severity: 0 },
+    { min: 65, max: 79, label: 'Distress elevato ma plausibile', severity: 1 },
+    { min: 80, max: 99, label: 'Possibile esagerazione — valutare validità', severity: 2 },
+    { min: 100, max: 200, label: 'Protocollo probabilmente invalido', severity: 3 },
+  ],
+  Fb: [
+    { min: 0, max: 64, label: 'Nella norma', severity: 0 },
+    { min: 65, max: 89, label: 'Attenzione (seconda metà del protocollo)', severity: 1 },
+    { min: 90, max: 200, label: 'Possibile invalidità della seconda metà', severity: 2 },
+  ],
+  Fp: [
+    { min: 0, max: 69, label: 'Nella norma', severity: 0 },
+    { min: 70, max: 99, label: 'Attenzione — possibile amplificazione', severity: 1 },
+    { min: 100, max: 200, label: 'Protocollo probabilmente invalido', severity: 3 },
+  ],
+  L: [
+    { min: 0, max: 64, label: 'Nella norma', severity: 0 },
+    { min: 65, max: 79, label: 'Presentazione favorevole di sé', severity: 1 },
+    { min: 80, max: 200, label: 'Probabile invalidità (immagine virtuosa)', severity: 2 },
+  ],
+  K: [
+    { min: 0, max: 39, label: 'Scarse difese / richiesta di aiuto', severity: 1 },
+    { min: 40, max: 64, label: 'Nella norma', severity: 0 },
+    { min: 65, max: 200, label: 'Difensività', severity: 1 },
+  ],
+  S: [
+    { min: 0, max: 69, label: 'Nella norma', severity: 0 },
+    { min: 70, max: 200, label: 'Autopresentazione superlativa/difensività', severity: 1 },
+  ],
+};
+
+// applica fasce: T standard alle scale cliniche/di contenuto, dedicate alla validità, grezzo a VRIN/TRIN
 for (const sc of scales) {
   const code = sc.name.split(' — ')[0].split(' · ').pop() ?? '';
-  if (sc.compute === 'key' && sc.tscores && !NO_BANDS.has(code)) sc.bands = T_BANDS;
+  if (VALIDITY_BANDS[code]) sc.bands = VALIDITY_BANDS[code];
+  else if (sc.id === 'vrin') sc.bands = [
+    { min: 0, max: 12, label: 'Coerenza accettabile', severity: 0 },
+    { min: 13, max: 99, label: 'Grezzo ≥13 — protocollo incoerente/invalido', severity: 3 },
+  ];
+  else if (sc.id === 'trin') sc.bands = [
+    { min: 0, max: 5, label: 'Acquiescenza al "Falso" — validità dubbia', severity: 2 },
+    { min: 6, max: 12, label: 'Coerenza accettabile', severity: 0 },
+    { min: 13, max: 99, label: 'Acquiescenza al "Vero" — validità dubbia', severity: 2 },
+  ];
+  else if (sc.compute === 'key' && sc.tscores && !NO_BANDS.has(code)) sc.bands = T_BANDS;
 }
 
 export const mmpi2: TestDefinition = {
@@ -84,5 +128,13 @@ export const mmpi2: TestDefinition = {
   categories: ['Personalità'],
   sections,
   scales,
+  info: `ORDINE DI LETTURA DEL PROTOCOLLO:
+1) Validità, in sequenza: item omessi (Cannot Say ≥30 = cautela, valutare quali scale sono coperte) → VRIN (coerenza) → TRIN (acquiescenza) → F, Fb, Fp (amplificazione) → L, K, S (minimizzazione/difensività). Se il protocollo è invalido, le scale cliniche non si interpretano.
+2) Scale cliniche (con correzione K dove prevista): T ≥ 65 = clinicamente significativo. Interpretare il profilo per configurazioni (code-type a 2 punte, es. 2-7/7-2), non le singole scale isolate.
+3) Sottoscale Harris-Lingoes e componenti di contenuto: si usano per qualificare le elevazioni delle scale madri (perché quella scala è alta?), solo se la scala madre è elevata e il contenuto lo giustifica.
+4) Scale di contenuto e supplementari: integrano il quadro (il contenuto riflette ciò che il paziente ha voluto comunicare).
+5) RC e PSY-5: lettura dimensionale complementare.
+
+AVVERTENZE: i punti T di questa implementazione sono i T lineari dello scorer statunitense di origine; per la refertazione in Italia usare le norme italiane del manuale in licenza (caricabili con "Importa da manuale (IA) → Arricchisci test esistente", che sostituisce le tabelle "tscores" e i cutoff con quelli del manuale). L'interpretazione dell'MMPI-2 richiede la qualifica prevista dall'editore.`,
   notes: 'IMPORTANTE: (1) impostare il sesso del paziente nella sua scheda, altrimenti i punti T non sono calcolabili; (2) i punti T qui calcolati sono quelli LINEARI dello scorer di origine (non i T uniformati delle norme italiane Pancheri-Sirigatti): confrontare con il manuale in licenza prima dell’uso refertale; (3) alcune tabelle T contenevano refusi nella fonte, corretti per interpolazione — verificare le scale Mf-M, Pt, Sc, Ma, Sc4-F, ASP-F, AAS-F, Mt-M, PK-F, NEGE-F; (4) VRIN/TRIN sono riportate come punteggio grezzo (cutoff manuale: grezzo ≥13 protocollo dubbio); (5) item lasciati in blocchi da 100 con possibilità di sospendere e riprendere la compilazione; (6) interpretazione riservata a professionisti qualificati secondo la licenza dell’editore.',
 };

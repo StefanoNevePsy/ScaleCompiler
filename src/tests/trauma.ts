@@ -58,6 +58,10 @@ export const pcl5: TestDefinition = {
     { id: 'd', name: 'Criterio D — Alterazioni cognitive/umore (0-28)', items: ['q8','q9','q10','q11','q12','q13','q14'], compute: 'sum' },
     { id: 'e', name: 'Criterio E — Arousal e reattività (0-24)', items: ['q15','q16','q17','q18','q19','q20'], compute: 'sum' },
   ],
+  info: `SOMMINISTRAZIONE: riferita all'evento stressante peggiore (verificare il Criterio A, idealmente con LEC-5); ultime 4 settimane.
+SCORING: somma 0-80; cluster DSM-5: B intrusioni (1-5), C evitamento (6-7), D cognizioni/umore (8-14), E arousal (15-20).
+INTERPRETAZIONE: cutoff 31-33 per probabile PTSD; diagnosi provvisoria se ≥1 item B, ≥1 C, ≥2 D, ≥2 E con punteggio ≥2 ("Moderatamente").
+MONITORAGGIO: variazione ≥10 punti = cambiamento clinicamente significativo; 5-10 = affidabile.`,
   notes: 'Somministrare in riferimento all’evento peggiore (idealmente con Criterio A verificato, es. LEC-5). Diagnosi provvisoria per criteri DSM-5: almeno 1 item B, 1 C, 2 D, 2 E con punteggio ≥2. Cutoff totale 31-33.',
 };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_MODELS, MASTER_PROMPT, extractJson, generateDefinition, type AiConfig } from '../ai';
-import { db, getSetting, setSetting } from '../db';
+import { DEFAULT_MODELS, MASTER_PROMPT, enrichPrompt, extractJson, generateDefinition, type AiConfig } from '../ai';
+import { db, getAllTests, getSetting, getTest, setSetting } from '../db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { href, nav, readFileBase64, toast } from '../components';
 import { allItems, validateDefinition } from '../scoring';
 import type { TestDefinition } from '../types';
@@ -16,6 +17,17 @@ export function AiImport() {
   const [pasted, setPasted] = useState('');
   const [preview, setPreview] = useState<TestDefinition | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [mode, setMode] = useState<'nuovo' | 'arricchisci'>('nuovo');
+  const [targetId, setTargetId] = useState('');
+  const tests = useLiveQuery(() => getAllTests(), []) ?? [];
+
+  const basePrompt = async (): Promise<string | undefined> => {
+    if (mode === 'nuovo') return undefined;
+    if (!targetId) { toast('Scegli il test da arricchire.'); return undefined; }
+    const def = await getTest(targetId);
+    if (!def) { toast('Test non trovato.'); return undefined; }
+    return enrichPrompt(JSON.stringify(def));
+  };
 
   useEffect(() => {
     (async () => {
@@ -58,9 +70,11 @@ export function AiImport() {
     setBusy(true); setErrors([]); setPreview(null);
     try {
       await persistCfg();
+      const prompt = await basePrompt();
+      if (mode === 'arricchisci' && !prompt) { setBusy(false); return; }
       const out = await generateDefinition(
         { provider, apiKey, model },
-        { text, extraInstructions: extra || undefined, pdf: pdf ?? undefined },
+        { text, extraInstructions: extra || undefined, pdf: pdf ?? undefined, prompt },
       );
       setPasted(out);
       validate(out);
@@ -72,7 +86,9 @@ export function AiImport() {
   };
 
   const copyPrompt = async () => {
-    const full = MASTER_PROMPT + '\n\n' + (extra ? `ISTRUZIONI AGGIUNTIVE: ${extra}\n\n` : '') + (text || '[INCOLLA QUI IL MATERIALE DEL TEST / ALLEGA IL MANUALE]');
+    const base = mode === 'arricchisci' ? await basePrompt() : MASTER_PROMPT;
+    if (!base) return;
+    const full = base + '\n\n' + (extra ? `ISTRUZIONI AGGIUNTIVE: ${extra}\n\n` : '') + (text || '[INCOLLA QUI IL MATERIALE DEL TEST / ALLEGA IL MANUALE]');
     await navigator.clipboard.writeText(full);
     toast('Prompt copiato: incollalo in un chatbot (con il manuale) e riporta qui il JSON prodotto.');
   };
@@ -101,7 +117,30 @@ export function AiImport() {
         Privacy: il materiale inserito qui viene inviato al provider IA scelto. Inserisci solo il testo dello strumento (mai dati di pazienti) e rispetta i termini della licenza del test.
       </p>
 
-      <h2>1 · Provider IA</h2>
+      <h2>1 · Cosa vuoi fare</h2>
+      <div className="row">
+        <label className="field">Modalità
+          <select value={mode} onChange={e => setMode(e.target.value as any)}>
+            <option value="nuovo">Crea un nuovo test dal manuale</option>
+            <option value="arricchisci">Arricchisci un test esistente (norme italiane, tabelle T, cutoff, testi, spiegazioni item)</option>
+          </select>
+        </label>
+        {mode === 'arricchisci' && (
+          <label className="field" style={{ flex: 2 }}>Test da arricchire
+            <select value={targetId} onChange={e => setTargetId(e.target.value)}>
+              <option value="">— scegli —</option>
+              {tests.map(t => <option key={t.id} value={t.id}>{t.acronym} — {t.name}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
+      {mode === 'arricchisci' && (
+        <p className="small muted" style={{ maxWidth: '80ch' }}>
+          L'IA riceve la definizione attuale e il materiale che incolli (es. le tabelle delle norme italiane dal manuale in licenza) e restituisce lo stesso test con i campi aggiornati: pura trascrizione, adatta a modelli economici (es. gemini-2.5-flash). Il risultato viene comunque validato prima del salvataggio.
+        </p>
+      )}
+
+      <h2>2 · Provider IA</h2>
       <div className="row">
         <label className="field">Provider
           <select value={provider} onChange={e => switchProvider(e.target.value as AiConfig['provider'])}>
@@ -119,7 +158,7 @@ export function AiImport() {
       </div>
       <p className="small muted">La chiave resta salvata solo in questo browser. In alternativa, usa «Copia prompt» e lavora in un chatbot qualsiasi senza chiave.</p>
 
-      <h2>2 · Materiale del test</h2>
+      <h2>3 · Materiale</h2>
       <label className="field">Testo del manuale / protocollo / articolo (incolla qui)
         <textarea rows={10} value={text} onChange={e => setText(e.target.value)}
           placeholder="Incolla consegna, elenco item con le opzioni di risposta, regole di scoring, sottoscale e cutoff…" />
@@ -143,7 +182,7 @@ export function AiImport() {
         <button className="btn-secondary" onClick={copyPrompt}>Copia prompt completo (per chatbot esterno)</button>
       </div>
 
-      <h2>3 · Risultato</h2>
+      <h2>4 · Risultato</h2>
       <label className="field">JSON prodotto (dall’IA o incollato da un chatbot esterno)
         <textarea rows={10} style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.8125rem' }}
           value={pasted} onChange={e => setPasted(e.target.value)} spellCheck={false}

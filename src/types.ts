@@ -17,6 +17,8 @@ export interface Item {
   reverse?: boolean;
   optional?: boolean;
   help?: string;
+  /** spiegazione estesa dell'item (es. ancore/definizioni dal manuale), mostrata a richiesta con il tasto info */
+  info?: string;
 }
 
 export interface Section {
@@ -85,6 +87,8 @@ export interface TestDefinition {
   sections: Section[];
   scales: Scale[];
   notes?: string;
+  /** guida estesa (somministrazione, scoring, interpretazione dal manuale), mostrata con il tasto Info */
+  info?: string;
 }
 
 export type AnswerValue = number | number[] | string | null;

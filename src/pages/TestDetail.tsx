@@ -109,6 +109,13 @@ export function TestDetail({ id }: { id: string }) {
 
       <CategoryEditor testId={id} />
 
+      {test.info && (
+        <details className="test-info">
+          <summary>ⓘ Info e istruzioni del test (manuale)</summary>
+          <div>{test.info}</div>
+        </details>
+      )}
+
       {test.notes && <p className="callout small">{test.notes}</p>}
 
       {isOverride && isBuiltin && (

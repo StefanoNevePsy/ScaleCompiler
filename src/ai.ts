@@ -22,7 +22,8 @@ interface TestDefinition {
   defaultOptions?: Option[]; // scala di risposta condivisa da tutti gli item (se esiste)
   sections: Section[];
   scales: Scale[];
-  notes?: string;      // istruzioni di somministrazione/scoring che il clinico deve conoscere
+  notes?: string;      // avvertenze brevi di somministrazione/scoring che il clinico deve conoscere
+  info?: string;       // guida estesa dal manuale: istruzioni di somministrazione, scoring, interpretazione
 }
 interface Option { value: number; label: string } // value = punteggio numerico REALE usato nello scoring
 interface Section {
@@ -38,7 +39,8 @@ interface Item {
   options?: Option[];  // solo se diverse da quelle di sezione/test
   reverse?: boolean;   // true se l'item è a punteggio invertito: v' = (min+max) - v
   optional?: boolean;  // true se l'item può legittimamente restare senza risposta
-  help?: string;       // eventuali istruzioni specifiche dell'item
+  help?: string;       // istruzione breve dell'item (sempre visibile)
+  info?: string;       // spiegazione estesa dell'item dal manuale (ancore per livello, definizioni, esempi) mostrata a richiesta: se il manuale spiega gli item, riportala qui FEDELMENTE
 }
 interface Scale {
   id: string; name: string;   // sottoscala o punteggio totale
@@ -81,6 +83,34 @@ Esempio minimo di output valido (solo per il formato, non per il contenuto):
 
 Ora analizza il materiale seguente e produci il JSON:`;
 
+/**
+ * Prompt di ARRICCHIMENTO: aggiorna una definizione esistente con materiale dal manuale
+ * (norme/tabelle T italiane, cutoff, testi esatti degli item, spiegazioni per item).
+ * Pensato per modelli economici: lavoro di trascrizione fedele, non di costruzione.
+ */
+export const enrichPrompt = (currentJson: string) => `Sei un assistente di trascrizione psicometrica. Ti fornisco: (A) la definizione JSON ESISTENTE di un test già funzionante e (B) nuovo materiale dal manuale (norme, tabelle di conversione, cutoff, testi degli item, spiegazioni/ancore).
+
+Il tuo compito è restituire LA STESSA definizione JSON aggiornata con le informazioni del materiale. NON è un compito creativo: è pura trascrizione fedele.
+
+COSA PUOI AGGIORNARE (solo se il materiale lo copre):
+1. Testi degli item ("text"): sostituiscili con quelli ESATTI del materiale (stessa lingua del materiale).
+2. "info" degli item: se il manuale spiega gli item (ancore per livello, definizioni, esempi — es. CANS), trascrivi la spiegazione nell'"info" dell'item corrispondente.
+3. "info" del test: istruzioni di somministrazione, scoring e interpretazione dal manuale (testo esteso).
+4. "bands" (cutoff): sostituisci con i cutoff esatti del materiale (es. cutoff italiani), coprendo l'intero range senza buchi.
+5. "tscores" delle scale: se il materiale contiene tabelle di conversione grezzo→T (es. norme italiane per genere), trascrivile come array dove l'INDICE è il punteggio grezzo (con eventuale correzione K già applicata secondo il manuale) e il VALORE è il T; usa null per i grezzi senza conversione; "m" = maschi, "f" = femmine. Verifica di aver copiato OGNI valore correttamente: un numero sbagliato produce diagnosi sbagliate.
+6. "notes": aggiorna le avvertenze se il materiale le cambia (es. "norme italiane XYZ, anno").
+
+REGOLE VINCOLANTI:
+- NON cambiare: "id" del test, id degli item, struttura di sezioni/scale, "compute", chiavi keyTrue/keyFalse, salvo che il materiale dimostri un errore (nel caso, segnalalo in "notes").
+- NON inventare valori: se una tabella è illeggibile o incompleta, lascia il campo com'era e segnalalo in "notes".
+- Tutto ciò che il materiale non copre resta IDENTICO all'originale.
+- Output: SOLO il JSON completo aggiornato, senza testo prima o dopo, senza fence markdown.
+
+(A) DEFINIZIONE ESISTENTE:
+${currentJson}
+
+(B) MATERIALE DAL MANUALE:`;
+
 export interface AiConfig {
   provider: 'gemini' | 'nvidia';
   apiKey: string;
@@ -93,12 +123,15 @@ export interface AiInput {
   text: string; // testo del manuale/test incollato
   pdf?: { base64: string; mimeType: string }; // solo Gemini
   extraInstructions?: string; // es. "genera solo la forma genitori"
+  /** prompt alternativo (es. enrichPrompt); default MASTER_PROMPT */
+  prompt?: string;
 }
 
 export async function generateDefinition(cfg: AiConfig, input: AiInput): Promise<string> {
+  const basePrompt = input.prompt ?? MASTER_PROMPT;
   const userText = (input.extraInstructions ? `ISTRUZIONI AGGIUNTIVE: ${input.extraInstructions}\n\n` : '') + input.text;
   if (cfg.provider === 'gemini') {
-    const parts: any[] = [{ text: MASTER_PROMPT + '\n\n' + userText }];
+    const parts: any[] = [{ text: basePrompt + '\n\n' + userText }];
     if (input.pdf) parts.push({ inlineData: { mimeType: input.pdf.mimeType, data: input.pdf.base64 } });
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`,
@@ -127,7 +160,7 @@ export async function generateDefinition(cfg: AiConfig, input: AiInput): Promise
       temperature: 0.1,
       max_tokens: 32768,
       messages: [
-        { role: 'system', content: MASTER_PROMPT },
+        { role: 'system', content: basePrompt },
         { role: 'user', content: userText },
       ],
     }),

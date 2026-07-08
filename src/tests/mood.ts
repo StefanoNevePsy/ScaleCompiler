@@ -70,6 +70,10 @@ export const phq9: TestDefinition = {
       { min: 1, max: 3, label: 'Presente — approfondire il rischio', severity: 3 },
     ] },
   ],
+  info: `SCORING: somma item 1-9 (0-27). Fasce: 0-4 minima, 5-9 lieve, 10-14 moderata, 15-19 moderatamente grave, 20-27 grave.
+USO CLINICO: ≥10 = screening positivo (sensibilità e specificità ≈88% per depressione maggiore). Algoritmo diagnostico alternativo: item 1 o 2 ≥2 più ≥5 item ≥2 (l'item 9 conta anche a 1).
+MONITORAGGIO: riduzione ≥5 punti = risposta clinicamente rilevante; <5 = remissione.
+SICUREZZA: item 9 >0 richiede sempre approfondimento del rischio suicidario nel colloquio.`,
   notes: 'Cutoff screening ≥10. L’item 10 (compromissione funzionale) non entra nel totale. Item 9 positivo ⇒ valutazione del rischio suicidario.',
 };
 
@@ -285,5 +289,8 @@ export const epds: TestDefinition = {
     { min: 10, max: 12, label: 'Possibile depressione — monitorare/rivalutare', severity: 1 },
     { min: 13, max: 30, label: 'Probabile depressione — approfondimento clinico', severity: 2 },
   ] }],
+  info: `SOMMINISTRAZIONE: self-report, riferito agli ultimi 7 giorni; utilizzabile in gravidanza e nel post-partum (tipicamente 6-8 settimane). Non è uno strumento diagnostico: lo screening positivo va seguito da colloquio clinico.
+SCORING: somma 0-30; ogni item 0-3 nell'ordine mostrato.
+INTERPRETAZIONE: ≥10 possibile depressione (usato in molti programmi di screening), ≥13 probabile depressione; una variazione >4 punti tra somministrazioni è rilevante. Item 10 >0 = valutare subito il rischio autolesivo.`,
   notes: 'ATTENZIONE ALLO SCORING: nella versione originale gli item 3 e 5-10 sono a punteggio invertito (3-2-1-0); qui le opzioni sono già ordinate dal punteggio 0 al 3, MA VANNO VERIFICATE parola per parola sulla versione italiana validata prima dell’uso. Item 10 > 0 ⇒ valutare il rischio autolesivo. Cutoff comuni: ≥10 (screening), ≥13 (probabile depressione).',
 };

@@ -93,5 +93,10 @@ export const coreOm: TestDefinition = {
       { min: 0.1, max: 40, label: 'Rischio riferito — approfondire gli item', severity: 3 },
     ] },
   ],
+  info: `SOMMINISTRAZIONE: self-report, ~5-10 minuti, riferito all'ultima settimana. Adatto a inizio terapia, monitoraggio e fine terapia.
+SCORING: media degli item × 10 (range 0-40). Il totale è interpretabile con ≤3 item mancanti.
+INTERPRETAZIONE: cutoff clinico ≈ 10 (UK; la validazione italiana riporta valori simili — verificare sul proprio riferimento). Fasce: <6 sano, 6-9 basso, 10-14 lieve, 15-19 moderato, 20-24 moderato-grave, ≥25 grave.
+CAMBIAMENTO AFFIDABILE (RCSC): variazione ≥5 punti ≈ cambiamento affidabile; passaggio sotto il cutoff con variazione affidabile = miglioramento clinicamente significativo.
+RISCHIO: qualsiasi punteggio >0 sugli item 6, 9, 16, 22, 24, 34 va esaminato item per item nel colloquio.`,
   notes: 'Cutoff clinico totale ≈ 10 (media item × 10). Item a formulazione positiva (3, 4, 7, 12, 19, 21, 31, 32) a punteggio invertito. Fino a 3 item mancanti sul totale (1 per sottoscala P/F) come da manuale. Verificare testi e cutoff sulla versione italiana ufficiale (Palmieri et al., 2009) prima dell’uso clinico: usare "Importa da manuale (IA)" per sostituire i testi con quelli esatti.',
 };

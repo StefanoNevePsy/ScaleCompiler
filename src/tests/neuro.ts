@@ -42,6 +42,9 @@ export const aq10: TestDefinition = {
     { min: 0, max: 5, label: 'Sotto il cutoff', severity: 0 },
     { min: 6, max: 10, label: '≥6 — inviare a valutazione specialistica', severity: 2 },
   ] }],
+  info: `SCORING: 1 punto per risposta nella direzione chiave — in accordo (decisamente o abbastanza) per gli item 1, 7, 8, 10; in disaccordo per 2, 3, 4, 5, 6, 9. Totale 0-10.
+INTERPRETAZIONE: ≥6 = screening positivo secondo NICE → considerare invio a valutazione diagnostica specialistica per autismo.
+LIMITI: lo screening non sostituisce la valutazione (ADOS/ADI-R, osservazione clinica); nei quadri con buon compenso (specie donne adulte) sono possibili falsi negativi.`,
   notes: 'Ogni item vale 1 punto nella direzione indicata dalla chiave (accordo per 1, 7, 8, 10; disaccordo per gli altri). ATTENZIONE: due opzioni condividono lo stesso punteggio, quindi il CSV item riporta il punteggio, non l’opzione esatta. Verificare chiave e testi sulla versione ufficiale ARC.',
 };
 
@@ -105,6 +108,9 @@ export const asrs: TestDefinition = {
     ] },
     { id: 'parte-b', name: 'Parte B — gravità complessiva (0-48, informale)', items: ['b7','b8','b9','b10','b11','b12','b13','b14','b15','b16','b17','b18'], compute: 'sum' },
   ],
+  info: `SCORING PARTE A (screener): 6 item con soglie "a caselle ombreggiate" — item 1-3 contano da «A volte», item 4-6 da «Spesso». ≥4 risposte significative = screening positivo, altamente compatibile con ADHD dell'adulto: procedere con valutazione clinica completa (anamnesi evolutiva, compromissione in più contesti, esclusione di altre cause).
+PARTE B: approfondimento qualitativo dei 12 sintomi rimanenti; utile in colloquio, non ha cutoff.
+NOTA: lo screening positivo NON è diagnosi; l'ADHD adulto richiede esordio nell'infanzia e compromissione attuale.`,
   notes: 'La Parte A usa lo scoring ufficiale a "caselle ombreggiate": item 1-3 contano da «A volte» in su, item 4-6 da «Spesso» in su. La Parte B è riportata come frequenza grezza (0-4) e serve da approfondimento qualitativo.',
 };
 
@@ -186,5 +192,9 @@ export const snap4: TestDefinition = {
       { min: 1.88, max: 3, label: 'Sopra il cutoff', severity: 2 },
     ] },
   ],
+  info: `COMPILAZIONE: genitore o insegnante, riferita all'ultimo mese; indicare il compilante nel campo "Compilato da" (i cutoff differiscono).
+SCORING: media per sottoscala (somma/9, oppure /8 per l'oppositività).
+CUTOFF MTA (media): Disattenzione — genitori 1.78, insegnanti 2.56; Iperattività/Impulsività — genitori 1.44, insegnanti 1.78; Oppositività — genitori 1.88, insegnanti 2.05 (valori indicativi, verificare sulla fonte in uso).
+USO: utile per screening e monitoraggio della risposta al trattamento (ripetibile); la diagnosi richiede valutazione multi-informatore e multi-contesto.`,
   notes: 'Punteggio per sottoscala = media degli item. I cutoff MTA (genitori/insegnanti) qui riportati sono indicativi e DA VERIFICARE sulla fonte in uso; scegliere la fascia pertinente in base al compilante (campo "Compilato da").',
 };

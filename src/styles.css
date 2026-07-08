@@ -132,6 +132,27 @@ kbd {
   padding: 1px 4px; background: var(--surface);
 }
 
+.test-info { margin: 1rem 0; max-width: 80ch; }
+.test-info summary {
+  cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--primary);
+  padding: 0.4rem 0; list-style: none;
+}
+.test-info summary::-webkit-details-marker { display: none; }
+.test-info > div {
+  background: var(--surface); border-radius: var(--radius); padding: 0.75rem 1rem;
+  font-size: 0.875rem; white-space: pre-wrap;
+}
+.info-btn {
+  border: none; background: none; color: var(--primary); font-size: 0.9375rem;
+  padding: 0 0.3rem; cursor: pointer; vertical-align: baseline;
+}
+.info-btn:hover { color: var(--primary-hover); }
+.item-info {
+  background: var(--surface); border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.5rem 0.75rem; margin-top: 0.4rem; font-size: 0.8125rem; color: var(--ink);
+  white-space: pre-wrap;
+}
+
 /* Compilazione — griglia */
 .item-row { display: flex; gap: 1rem; padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--border); align-items: baseline; }
 .item-row.active { background: var(--primary-soft); border-radius: var(--radius); }

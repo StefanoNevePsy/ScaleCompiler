@@ -30,6 +30,8 @@ function Form({ test, patientId, patientCode, existing }: {
   const [respondent, setRespondent] = useState(existing?.respondent ?? test.respondent ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [mode, setMode] = useState<'griglia' | 'guidata'>('griglia');
+  const [openInfo, setOpenInfo] = useState<Record<string, boolean>>({});
+  const toggleInfo = (id: string) => setOpenInfo(o => ({ ...o, [id]: !o[id] }));
   const [active, setActive] = useState(0);
 
   const entries = useMemo(() => allItems(test), [test]);
@@ -133,6 +135,12 @@ function Form({ test, patientId, patientCode, existing }: {
       </div>
 
       {test.timeframe && <p className="callout">Finestra temporale di riferimento: <strong>{test.timeframe}</strong></p>}
+      {test.info && (
+        <details className="test-info no-print">
+          <summary>ⓘ Info e istruzioni del test</summary>
+          <div>{test.info}</div>
+        </details>
+      )}
 
       {mode === 'griglia' ? (
         <div ref={listRef}>
@@ -144,7 +152,15 @@ function Form({ test, patientId, patientCode, existing }: {
                 const idx = entries.findIndex(e => e.item.id === item.id);
                 return (
                   <div key={item.id} data-idx={idx} className={`item-row${idx === active ? ' active' : ''}`} onClick={() => setActive(idx)}>
-                    <div className="txt">{item.text}{item.help && <span className="help">{item.help}</span>}</div>
+                    <div className="txt">
+                      {item.text}
+                      {item.info && (
+                        <button type="button" className="info-btn" aria-expanded={!!openInfo[item.id]} title="Spiegazione dell'item"
+                          onClick={e => { e.stopPropagation(); toggleInfo(item.id); }}>ⓘ</button>
+                      )}
+                      {item.help && <span className="help">{item.help}</span>}
+                      {item.info && openInfo[item.id] && <div className="item-info">{item.info}</div>}
+                    </div>
                     <ItemInput test={test} section={sec} item={item} value={answers[item.id]} onChange={(v, adv) => setAns(item, v, adv)} />
                   </div>
                 );
@@ -219,6 +235,12 @@ function Guided({ test, entries, answers, active, setActive, onAnswer, onDone }:
       <div className="muted small">{e.section.title} — domanda {active + 1} di {entries.length}</div>
       {e.section.note && <p className="muted">{e.section.note}</p>}
       <div className="q">{e.item.text}</div>
+      {e.item.info && (
+        <details className="test-info" style={{ textAlign: 'left' }}>
+          <summary>ⓘ Spiegazione</summary>
+          <div>{e.item.info}</div>
+        </details>
+      )}
       <ItemInput big test={test} section={e.section} item={e.item} value={answers[e.item.id]}
         onChange={v => { onAnswer(e.item, v); }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem' }} className="no-print">
