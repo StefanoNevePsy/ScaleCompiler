@@ -125,6 +125,8 @@ export interface AiInput {
   extraInstructions?: string; // es. "genera solo la forma genitori"
   /** prompt alternativo (es. enrichPrompt); default MASTER_PROMPT */
   prompt?: string;
+  /** per timeout/annullamento della richiesta */
+  signal?: AbortSignal;
 }
 
 export async function generateDefinition(cfg: AiConfig, input: AiInput): Promise<string> {
@@ -138,6 +140,7 @@ export async function generateDefinition(cfg: AiConfig, input: AiInput): Promise
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: input.signal,
         body: JSON.stringify({
           contents: [{ role: 'user', parts }],
           generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
@@ -155,6 +158,7 @@ export async function generateDefinition(cfg: AiConfig, input: AiInput): Promise
   const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.apiKey}` },
+    signal: input.signal,
     body: JSON.stringify({
       model: cfg.model,
       temperature: 0.1,

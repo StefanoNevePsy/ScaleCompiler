@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_MODELS, MASTER_PROMPT, enrichPrompt, extractJson, generateDefinition, type AiConfig } from '../ai';
 import { db, getAllTests, getSetting, getTest, setSetting } from '../db';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -19,6 +19,8 @@ export function AiImport() {
   const [errors, setErrors] = useState<string[]>([]);
   const [mode, setMode] = useState<'nuovo' | 'arricchisci'>('nuovo');
   const [targetId, setTargetId] = useState('');
+  const [elapsed, setElapsed] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
   const tests = useLiveQuery(() => getAllTests(), []) ?? [];
 
   const basePrompt = async (): Promise<string | undefined> => {
@@ -41,6 +43,7 @@ export function AiImport() {
 
   const switchProvider = async (p: AiConfig['provider']) => {
     setProvider(p);
+    await setSetting('ai.provider', p); // salva subito la scelta del provider
     setApiKey((await getSetting(`ai.key.${p}`)) ?? '');
     setModel((await getSetting(`ai.model.${p}`)) ?? DEFAULT_MODELS[p]);
   };
@@ -67,23 +70,42 @@ export function AiImport() {
   const generate = async () => {
     if (!apiKey) { toast('Inserisci la chiave API.'); return; }
     if (!text.trim() && !pdf) { toast('Incolla il materiale del test o carica un PDF.'); return; }
-    setBusy(true); setErrors([]); setPreview(null);
+    await persistCfg();
+    const prompt = await basePrompt();
+    if (mode === 'arricchisci' && !prompt) return; // basePrompt ha già mostrato il toast
+
+    setBusy(true); setErrors([]); setPreview(null); setElapsed(0);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const t0 = Date.now();
+    let timedOut = false;
+    const tick = setInterval(() => setElapsed(Math.round((Date.now() - t0) / 1000)), 1000);
+    const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 180_000);
     try {
-      await persistCfg();
-      const prompt = await basePrompt();
-      if (mode === 'arricchisci' && !prompt) { setBusy(false); return; }
       const out = await generateDefinition(
         { provider, apiKey, model },
-        { text, extraInstructions: extra || undefined, pdf: pdf ?? undefined, prompt },
+        { text, extraInstructions: extra || undefined, pdf: pdf ?? undefined, prompt, signal: controller.signal },
       );
       setPasted(out);
       validate(out);
     } catch (e: any) {
-      setErrors([String(e.message ?? e)]);
+      const secs = Math.round((Date.now() - t0) / 1000);
+      if (controller.signal.aborted) {
+        setErrors([timedOut
+          ? `Timeout dopo ${secs}s: il provider non ha risposto. Con un PDF grande può volerci di più — riprova, riduci/ritaglia il PDF, oppure usa «Copia prompt» in un chatbot esterno.`
+          : `Generazione annullata dopo ${secs}s.`]);
+      } else {
+        setErrors([`Errore dopo ${secs}s: ${String(e?.message ?? e)}`]);
+      }
     } finally {
+      clearInterval(tick);
+      clearTimeout(timeout);
+      abortRef.current = null;
       setBusy(false);
     }
   };
+
+  const cancel = () => abortRef.current?.abort();
 
   const copyPrompt = async () => {
     const base = mode === 'arricchisci' ? await basePrompt() : MASTER_PROMPT;
@@ -150,10 +172,12 @@ export function AiImport() {
         </label>
         <label className="field">Chiave API
           <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)}
+            onBlur={() => setSetting(`ai.key.${provider}`, apiKey)}
             placeholder={provider === 'gemini' ? 'AI Studio → Get API key' : 'build.nvidia.com → API key (nvapi-…)'} />
         </label>
         <label className="field">Modello
-          <input value={model} onChange={e => setModel(e.target.value)} />
+          <input value={model} onChange={e => setModel(e.target.value)}
+            onBlur={() => setSetting(`ai.model.${provider}`, model)} />
         </label>
       </div>
       <p className="small muted">La chiave resta salvata solo in questo browser. In alternativa, usa «Copia prompt» e lavora in un chatbot qualsiasi senza chiave.</p>
@@ -177,10 +201,19 @@ export function AiImport() {
       </div>
       {pdf && <p className="small muted">PDF allegato: {pdf.name} <button className="btn-secondary btn-sm" onClick={() => setPdf(null)}>Rimuovi</button></p>}
 
-      <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0', flexWrap: 'wrap' }}>
-        <button className="btn-primary" onClick={generate} disabled={busy}>{busy ? 'Generazione in corso…' : 'Genera con IA'}</button>
-        <button className="btn-secondary" onClick={copyPrompt}>Copia prompt completo (per chatbot esterno)</button>
+      <div style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0 0.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button className="btn-primary" onClick={generate} disabled={busy}>
+          {busy ? `Generazione in corso… ${elapsed}s` : 'Genera con IA'}
+        </button>
+        {busy && <button className="btn-secondary" onClick={cancel}>Annulla</button>}
+        <button className="btn-secondary" onClick={copyPrompt} disabled={busy}>Copia prompt completo (per chatbot esterno)</button>
       </div>
+      {busy && (
+        <p className="small muted">
+          Richiesta inviata a {provider === 'gemini' ? 'Google Gemini' : 'build.nvidia.com'}…{' '}
+          {pdf ? 'con un PDF può richiedere 1–2 minuti.' : 'di solito 10–40 secondi.'} Interruzione automatica a 3 minuti.
+        </p>
+      )}
 
       <h2>4 · Risultato</h2>
       <label className="field">JSON prodotto (dall’IA o incollato da un chatbot esterno)
