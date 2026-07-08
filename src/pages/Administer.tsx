@@ -73,22 +73,30 @@ function Form({ test, patientId, patientCode, existing }: {
     return () => removeEventListener('keydown', onKey);
   });
 
+  const build = (): Administration => ({
+    id: existing?.id ?? uid(),
+    patientId,
+    testId: test.id,
+    date: new Date(date + 'T12:00:00').toISOString(),
+    respondent: respondent || undefined,
+    notes: notes || undefined,
+    answers,
+    completed: entries.every(({ item }) => item.optional || answers[item.id] !== undefined && answers[item.id] !== '' && !(Array.isArray(answers[item.id]) && (answers[item.id] as number[]).length === 0)),
+  });
+
   const save = async () => {
-    const completed = entries.every(({ item }) => item.optional || answers[item.id] !== undefined && answers[item.id] !== '' && !(Array.isArray(answers[item.id]) && (answers[item.id] as number[]).length === 0));
-    if (!completed && !confirm(`Mancano ${total - answered} risposte. Salvare comunque come incompleta?`)) return;
-    const admin: Administration = {
-      id: existing?.id ?? uid(),
-      patientId,
-      testId: test.id,
-      date: new Date(date + 'T12:00:00').toISOString(),
-      respondent: respondent || undefined,
-      notes: notes || undefined,
-      answers,
-      completed,
-    };
+    const admin = build();
+    if (!admin.completed && !confirm(`Mancano ${total - answered} risposte. Concludere comunque come incompleta? (Per riprenderla più tardi usa invece «Sospendi»)`)) return;
     await db.administrations.put(admin);
     toast('Somministrazione salvata.');
     nav('somm', admin.id);
+  };
+
+  const suspend = async () => {
+    const admin = { ...build(), draft: true };
+    await db.administrations.put(admin);
+    toast('Compilazione sospesa: riprendila dalla pagina del paziente.');
+    nav('p', patientId);
   };
 
   return (
@@ -105,7 +113,8 @@ function Form({ test, patientId, patientCode, existing }: {
               {mode === 'griglia' ? 'Modalità paziente (guidata)' : 'Modalità clinico (griglia)'}
             </button>
             <a className="btn btn-secondary btn-sm" href={href('p', patientId)}>Esci senza salvare</a>
-            <button className="btn-primary btn-sm" onClick={save}>Salva</button>
+            <button className="btn-secondary btn-sm" onClick={suspend}>Sospendi</button>
+            <button className="btn-primary btn-sm" onClick={save}>Concludi</button>
           </div>
         </div>
         <div className="bar"><div style={{ transform: `scaleX(${total ? answered / total : 0})` }} /></div>
@@ -143,7 +152,8 @@ function Form({ test, patientId, patientCode, existing }: {
             </section>
           ))}
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-            <button className="btn-primary" onClick={save}>Salva somministrazione</button>
+            <button className="btn-primary" onClick={save}>Concludi somministrazione</button>
+            <button className="btn-secondary" onClick={suspend}>Sospendi e riprendi più tardi</button>
           </div>
         </div>
       ) : (

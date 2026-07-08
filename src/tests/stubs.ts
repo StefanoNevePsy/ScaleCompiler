@@ -25,6 +25,7 @@ export const qbs = stub({
   description: 'Valutazione del benessere scolastico (versioni studente, genitori e insegnanti). Item protetti da copyright editoriale: inserirli dal manuale in possesso del centro.',
   population: 'Studenti 8-18 anni',
   respondent: 'paziente',
+  categories: ['Scuola', 'Età evolutiva'],
 });
 
 export const crm = stub({
@@ -39,6 +40,7 @@ export const icfAdat = stub({
   id: 'icf-adat',
   acronym: 'ICF-ADAT',
   name: 'ICF-ADAT — Valutazione su base ICF',
+  categories: ['Disabilità e funzionamento'],
   description: 'Strumento di valutazione del funzionamento su base ICF (attività/partecipazione, fattori ambientali). Completare con qualificatori, domini e item dalla versione in uso nel centro.',
   respondent: 'clinico',
 });
@@ -47,6 +49,7 @@ export const wdms = stub({
   id: 'work-design-monitoring',
   acronym: 'WDMS',
   name: 'Work Design and Monitoring Sheet — Scheda di progettazione e monitoraggio del lavoro',
+  categories: ['Pianificazione e lavoro'],
   description: 'Scheda di progettazione e monitoraggio degli obiettivi di lavoro. Completare con i campi della scheda in uso nel centro (obiettivi, criteri, monitoraggio).',
   respondent: 'clinico',
 });

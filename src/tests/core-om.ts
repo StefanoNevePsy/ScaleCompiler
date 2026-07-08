@@ -72,6 +72,7 @@ export const coreOm: TestDefinition = {
   respondent: 'paziente',
   status: 'da_verificare',
   repeatable: true,
+  categories: ['Esito e monitoraggio', 'Screening generale'],
   defaultOptions: O,
   sections: [
     {

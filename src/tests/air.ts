@@ -26,6 +26,7 @@ export const air: TestDefinition = {
   respondent: 'paziente',
   status: 'da_verificare',
   repeatable: true,
+  categories: ['Disabilità e funzionamento'],
   defaultOptions: O,
   sections: [
     {

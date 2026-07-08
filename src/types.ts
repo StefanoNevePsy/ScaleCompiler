@@ -68,6 +68,8 @@ export interface TestDefinition {
   status: TestStatus;
   /** pensato per somministrazioni ripetute (monitoraggio) */
   repeatable?: boolean;
+  /** categorie tematiche (es. "Depressione e umore"); modificabili dall'utente senza toccare la definizione */
+  categories?: string[];
   defaultOptions?: Option[];
   sections: Section[];
   scales: Scale[];
@@ -97,6 +99,8 @@ export interface Administration {
   notes?: string;
   answers: Answers;
   completed: boolean;
+  /** compilazione sospesa: da riprendere in un secondo momento */
+  draft?: boolean;
 }
 
 export interface ScoreResult {

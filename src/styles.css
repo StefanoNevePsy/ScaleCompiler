@@ -101,10 +101,21 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 .badge.verificato { background: var(--sev0-soft); color: var(--sev0); }
 .badge.da_verificare { background: var(--sev1-soft); color: oklch(0.5 0.12 90); }
 .badge.bozza { background: var(--surface-2); color: var(--ink-2); }
+.badge.cat { background: var(--primary-soft); color: var(--primary); margin: 0 0.25rem 0.25rem 0; font-weight: 550; }
 .badge.sev0 { background: var(--sev0-soft); color: oklch(0.42 0.12 150); }
 .badge.sev1 { background: var(--sev1-soft); color: oklch(0.45 0.12 90); }
 .badge.sev2 { background: var(--sev2-soft); color: oklch(0.45 0.14 55); }
 .badge.sev3 { background: var(--sev3-soft); color: var(--sev3); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.25rem; }
+.chip {
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink-2);
+  border-radius: 999px; padding: 0.25rem 0.75rem; font-size: 0.8125rem; font-weight: 550; cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.chip:hover { background: var(--surface); }
+.chip.sel { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+.chip.new { border-style: dashed; }
 
 .panel { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; }
 .panel.soft { background: var(--surface); border: none; }

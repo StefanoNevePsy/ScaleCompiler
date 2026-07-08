@@ -1,9 +1,48 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, download, getTest } from '../db';
+import { addCustomCategory, db, download, getAllTests, getCatOverrides, getCustomCategories, getTest, setCatOverride, testCategories } from '../db';
 import { StatusBadge, href, nav, toast } from '../components';
 import { allItems, validateDefinition } from '../scoring';
 import { builtinTests } from '../tests';
+
+function CategoryEditor({ testId }: { testId: string }) {
+  const test = useLiveQuery(() => getTest(testId), [testId]);
+  const tests = useLiveQuery(() => getAllTests(), []) ?? [];
+  const overrides = useLiveQuery(() => getCatOverrides(), []) ?? {};
+  const custom = useLiveQuery(() => getCustomCategories(), []) ?? [];
+  const [newCat, setNewCat] = useState('');
+  if (!test) return null;
+  const current = testCategories(test, overrides);
+  const allCats = [...new Set([...tests.flatMap(t => testCategories(t, overrides)), ...custom])].sort((a, b) => a.localeCompare(b));
+
+  const toggle = async (c: string) => {
+    await setCatOverride(testId, current.includes(c) ? current.filter(x => x !== c) : [...current, c]);
+  };
+  const add = async () => {
+    const name = newCat.trim();
+    if (!name) return;
+    await addCustomCategory(name);
+    await setCatOverride(testId, [...current, name]);
+    setNewCat('');
+  };
+
+  return (
+    <div className="panel soft">
+      <strong className="small">Categorie</strong>
+      <div className="chips" style={{ margin: '0.5rem 0' }}>
+        {allCats.map(c => (
+          <button key={c} className={`chip${current.includes(c) ? ' sel' : ''}`} onClick={() => toggle(c)}
+            aria-pressed={current.includes(c)}>{c}</button>
+        ))}
+      </div>
+      <div className="row">
+        <input placeholder="Nuova categoria…" value={newCat} onChange={e => setNewCat(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') add(); }} style={{ maxWidth: 280 }} />
+        <div className="grow-0"><button className="btn-secondary btn-sm" onClick={add} disabled={!newCat.trim()}>Aggiungi e assegna</button></div>
+      </div>
+    </div>
+  );
+}
 
 export function TestDetail({ id }: { id: string }) {
   const test = useLiveQuery(() => getTest(id), [id]);
@@ -67,6 +106,8 @@ export function TestDetail({ id }: { id: string }) {
           <tr><td className="muted">Struttura</td><td>{test.sections.length} sezioni · {allItems(test).length} item · {test.scales.length} scale</td></tr>
         </tbody></table>
       </div>
+
+      <CategoryEditor testId={id} />
 
       {test.notes && <p className="callout small">{test.notes}</p>}
 

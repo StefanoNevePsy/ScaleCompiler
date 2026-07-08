@@ -43,6 +43,31 @@ export async function setSetting(key: string, value: string) {
   await db.settings.put({ key, value });
 }
 
+// ---------- Categorie ----------
+// Le categorie di un test vivono nella definizione (campo categories), ma l'utente può
+// riassegnarle senza modificare la definizione: gli override stanno nella tabella settings.
+
+export async function getCatOverrides(): Promise<Record<string, string[]>> {
+  const v = await getSetting('catOverrides');
+  return v ? JSON.parse(v) : {};
+}
+export async function setCatOverride(testId: string, cats: string[]) {
+  const o = await getCatOverrides();
+  o[testId] = cats;
+  await setSetting('catOverrides', JSON.stringify(o));
+}
+export async function getCustomCategories(): Promise<string[]> {
+  const v = await getSetting('customCategories');
+  return v ? JSON.parse(v) : [];
+}
+export async function addCustomCategory(name: string) {
+  const list = await getCustomCategories();
+  if (!list.includes(name)) await setSetting('customCategories', JSON.stringify([...list, name]));
+}
+export function testCategories(def: TestDefinition, overrides: Record<string, string[]>): string[] {
+  return overrides[def.id] ?? def.categories ?? [];
+}
+
 // ---------- Backup completo ----------
 
 export async function exportBackup(): Promise<string> {

@@ -98,6 +98,10 @@ export function validateDefinition(d: any): string[] {
   req(typeof d.acronym === 'string' && d.acronym.length > 0, 'Campo "acronym" mancante.');
   req(typeof d.name === 'string' && d.name.length > 0, 'Campo "name" mancante.');
   req(['verificato', 'da_verificare', 'bozza'].includes(d.status), 'Campo "status" deve essere: verificato | da_verificare | bozza.');
+  if (d.categories !== undefined) {
+    req(Array.isArray(d.categories) && d.categories.every((c: any) => typeof c === 'string'),
+      'Campo "categories" deve essere un array di stringhe.');
+  }
   req(Array.isArray(d.sections), 'Campo "sections" deve essere un array.');
   req(Array.isArray(d.scales), 'Campo "scales" deve essere un array.');
   if (!Array.isArray(d.sections) || !Array.isArray(d.scales)) return errs;

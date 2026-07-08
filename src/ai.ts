@@ -18,6 +18,7 @@ interface TestDefinition {
   respondent?: string; // chi compila: "paziente" | "clinico" | "genitore" | "insegnante" | altro
   status: "da_verificare"; // usa SEMPRE "da_verificare": la verifica umana avviene dopo
   repeatable?: boolean;    // true se pensato per somministrazioni ripetute nel tempo
+  categories?: string[];   // 1-3 categorie tematiche in italiano (es. "Depressione e umore", "Neurodivergenze", "Attaccamento e relazioni", "Età evolutiva")
   defaultOptions?: Option[]; // scala di risposta condivisa da tutti gli item (se esiste)
   sections: Section[];
   scales: Scale[];

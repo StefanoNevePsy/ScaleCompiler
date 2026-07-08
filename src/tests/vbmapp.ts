@@ -73,6 +73,7 @@ export const vbmapp: TestDefinition = {
   respondent: 'clinico',
   status: 'da_verificare',
   repeatable: true,
+  categories: ['Neurodivergenze', 'Età evolutiva'],
   sections: [
     levelSection(1, L1),
     levelSection(2, L2),

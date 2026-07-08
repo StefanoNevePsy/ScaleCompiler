@@ -31,6 +31,12 @@ export function Report({ adminId }: { adminId: string }) {
         </div>
       </div>
 
+      {admin.draft && (
+        <p className="callout warn no-print">
+          Compilazione <strong>sospesa</strong>: i punteggi sono parziali.{' '}
+          <a className="btn btn-secondary btn-sm" href={href('somm', admin.id, 'modifica')}>Riprendi la compilazione</a>
+        </p>
+      )}
       <h1>{test.acronym} — Report</h1>
       <p className="sub muted">
         {test.name}{test.version ? ` (${test.version})` : ''}
