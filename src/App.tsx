@@ -1,4 +1,4 @@
-import { ToastHost, href, useRoute } from './components';
+import { ThemeToggle, ToastHost, href, useRoute } from './components';
 import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Administer } from './pages/Administer';
@@ -42,6 +42,7 @@ export default function App() {
         {links.map(([key, label, url]) => (
           <a key={url} className={`nav${section === key || (key === '' && (section === 'p' || section === 'somm')) ? ' active' : ''}`} href={url}>{label}</a>
         ))}
+        <ThemeToggle />
         <div className="foot">Dati salvati solo su questo dispositivo. Esegui backup regolari.</div>
       </nav>
       <main>{page}</main>

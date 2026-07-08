@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, getAllTests, getCatOverrides, testCategories } from '../db';
+import { db, getAllTests, getCatOverrides, getHiddenTests, testCategories } from '../db';
 import { BandBadge, StatusBadge, fmtDate, href, nav, toast } from '../components';
 import { computeScores } from '../scoring';
 import { exportScoresCsv, patientLabel } from '../csv';
@@ -11,6 +11,7 @@ export function PatientDetail({ id }: { id: string }) {
   const admins = useLiveQuery(() => db.administrations.where('patientId').equals(id).toArray(), [id]) ?? [];
   const tests = useLiveQuery(() => getAllTests(), []) ?? [];
   const overrides = useLiveQuery(() => getCatOverrides(), []) ?? {};
+  const hiddenIds = useLiveQuery(() => getHiddenTests(), []) ?? [];
   const [pickTest, setPickTest] = useState('');
   const [editNotes, setEditNotes] = useState<string | null>(null);
 
@@ -21,7 +22,8 @@ export function PatientDetail({ id }: { id: string }) {
   for (const a of [...admins].sort((x, y) => y.date.localeCompare(x.date))) {
     byTest.set(a.testId, [...(byTest.get(a.testId) ?? []), a]);
   }
-  const administrable = tests.filter(t => t.status !== 'bozza');
+  const hidden = new Set(hiddenIds);
+  const administrable = tests.filter(t => t.status !== 'bozza' && !hidden.has(t.id));
 
   const start = () => {
     if (!pickTest) { toast('Scegli prima un test.'); return; }

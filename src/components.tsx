@@ -15,6 +15,23 @@ export function useRoute(): string[] {
 export const href = (...seg: (string | number)[]) => '#/' + seg.map(s => encodeURIComponent(String(s))).join('/');
 export const nav = (...seg: (string | number)[]) => { location.hash = href(...seg); };
 
+// ---------- Tema chiaro/scuro ----------
+
+export function ThemeToggle() {
+  const [theme, setTheme] = useState<string>(() => document.documentElement.dataset.theme ?? 'light');
+  const toggle = () => {
+    const t = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('theme', t); } catch { /* storage non disponibile */ }
+    setTheme(t);
+  };
+  return (
+    <button className="theme-toggle" onClick={toggle} aria-label={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}>
+      {theme === 'dark' ? '☀︎ Tema chiaro' : '☾ Tema scuro'}
+    </button>
+  );
+}
+
 // ---------- Badge ----------
 
 const STATUS_LABEL: Record<TestStatus, string> = {

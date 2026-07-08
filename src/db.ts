@@ -68,6 +68,39 @@ export function testCategories(def: TestDefinition, overrides: Record<string, st
   return overrides[def.id] ?? def.categories ?? [];
 }
 
+// ---------- Rimozione test dalla libreria ----------
+// I test integrati vivono nel codice e non possono essere cancellati: vengono "nascosti"
+// (id in un elenco in settings). I test personalizzati senza somministrazioni vengono
+// eliminati davvero; se hanno somministrazioni vengono nascosti, così i report restano
+// consultabili (getTest continua a risolvere la definizione).
+
+export async function getHiddenTests(): Promise<string[]> {
+  const v = await getSetting('hiddenTests');
+  return v ? JSON.parse(v) : [];
+}
+async function setHiddenTests(ids: string[]) {
+  await setSetting('hiddenTests', JSON.stringify(ids));
+}
+export async function unhideTest(id: string) {
+  await setHiddenTests((await getHiddenTests()).filter(x => x !== id));
+}
+
+export interface DeleteResult { message: string; hardDeleted: boolean }
+
+export async function deleteTest(id: string): Promise<DeleteResult> {
+  const isBuiltin = builtinTests.some(t => t.id === id);
+  const nAdmin = await db.administrations.where('testId').equals(id).count();
+  if (!isBuiltin && nAdmin === 0) {
+    await db.tests.delete(id);
+    return { message: 'Test personalizzato eliminato definitivamente.', hardDeleted: true };
+  }
+  // integrato, oppure personalizzato con somministrazioni: nascondi (reversibile)
+  const hidden = await getHiddenTests();
+  if (!hidden.includes(id)) await setHiddenTests([...hidden, id]);
+  const suffix = nAdmin > 0 ? ` Le ${nAdmin} somministrazioni restano consultabili.` : '';
+  return { message: `Test rimosso dalla libreria; ripristinabile dai nascosti.${suffix}`, hardDeleted: false };
+}
+
 // ---------- Backup completo ----------
 
 export async function exportBackup(): Promise<string> {
