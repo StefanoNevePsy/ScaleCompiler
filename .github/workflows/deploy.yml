@@ -1,5 +1,10 @@
 name: Deploy su GitHub Pages
 
+# PREREQUISITO (una tantum): su GitHub, Settings → Pages →
+# "Build and deployment" → Source → "GitHub Actions".
+# Senza questo, Pages continua a pubblicare i sorgenti dalla radice del branch
+# (index.html di sviluppo) invece della build compilata prodotta qui.
+
 on:
   push:
     branches: [claude/psychology-assessment-hub-xh0yzl]
@@ -23,19 +28,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      # Commuta la sorgente di Pages su "GitHub Actions" (build_type=workflow).
-      # Serve perché il repo era su "Deploy from a branch", che pubblicava i
-      # sorgenti (index.html di sviluppo). Non fallire il build se l'API rifiuta:
-      # in quel caso occorre cambiare la sorgente a mano (Settings → Pages).
-      - name: Imposta sorgente Pages su GitHub Actions
-        run: |
-          code=$(curl -sS -o /tmp/pages.txt -w '%{http_code}' -X PUT \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${{ github.repository }}/pages" \
-            -d '{"build_type":"workflow"}')
-          echo "HTTP $code"; cat /tmp/pages.txt || true
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
