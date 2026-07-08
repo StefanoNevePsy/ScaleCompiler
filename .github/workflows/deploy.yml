@@ -2,7 +2,7 @@ name: Deploy su GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [claude/psychology-assessment-hub-xh0yzl]
   workflow_dispatch:
 
 permissions:
