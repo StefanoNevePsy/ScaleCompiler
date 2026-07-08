@@ -146,6 +146,11 @@ export const mspss: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Attaccamento e relazioni', 'Benessere e qualità di vita'],
+  viz: { poles: {
+    fam: ['Basso supporto', 'Alto supporto', 1, 7],
+    ami: ['Basso supporto', 'Alto supporto', 1, 7],
+    spec: ['Basso supporto', 'Alto supporto', 1, 7],
+  } },
   defaultOptions: A7,
   sections: [{
     id: 'main', title: 'MSPSS',
@@ -218,6 +223,13 @@ export const miniIpip: TestDefinition = {
   status: 'da_verificare',
   repeatable: false,
   categories: ['Personalità'],
+  viz: { poles: {
+    e: ['Introversione', 'Estroversione', 4, 20],
+    a: ['Distacco', 'Amicalità', 4, 20],
+    c: ['Spontaneità', 'Coscienziosità', 4, 20],
+    n: ['Stabilità emotiva', 'Nevroticismo', 4, 20],
+    i: ['Concretezza', 'Apertura/immaginazione', 4, 20],
+  } },
   defaultOptions: [
     { value: 1, label: 'Molto in disaccordo' }, { value: 2, label: 'In disaccordo' }, { value: 3, label: 'Neutro' },
     { value: 4, label: 'D’accordo' }, { value: 5, label: 'Molto d’accordo' },
@@ -276,6 +288,10 @@ export const panas: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Benessere e qualità di vita', 'Depressione e umore'],
+  viz: { poles: {
+    pa: ['Basso affetto positivo', 'Alto affetto positivo', 10, 50],
+    na: ['Basso affetto negativo', 'Alto affetto negativo', 10, 50],
+  } },
   defaultOptions: P5,
   sections: [{
     id: 'main', title: 'PANAS',

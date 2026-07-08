@@ -128,6 +128,7 @@ export const mmpi2: TestDefinition = {
   categories: ['Personalità'],
   sections,
   scales,
+  viz: { profile: ['f', 'fb', 'fp', 'l', 'k', 's', 'hs', 'd', 'hy', 'pd', 'mf-m', 'mf-f', 'pa', 'pt', 'sc', 'ma', 'si'] },
   info: `ORDINE DI LETTURA DEL PROTOCOLLO:
 1) Validità, in sequenza: item omessi (Cannot Say ≥30 = cautela, valutare quali scale sono coperte) → VRIN (coerenza) → TRIN (acquiescenza) → F, Fb, Fp (amplificazione) → L, K, S (minimizzazione/difensività). Se il protocollo è invalido, le scale cliniche non si interpretano.
 2) Scale cliniche (con correzione K dove prevista): T ≥ 65 = clinicamente significativo. Interpretare il profilo per configurazioni (code-type a 2 punte, es. 2-7/7-2), non le singole scale isolate.

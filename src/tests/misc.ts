@@ -20,6 +20,13 @@ export const pid5bf: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Personalità'],
+  viz: { poles: {
+    neg: ['Assente', 'Marcata', 0, 15],
+    dist: ['Assente', 'Marcato', 0, 15],
+    ant: ['Assente', 'Marcato', 0, 15],
+    dis: ['Assente', 'Marcata', 0, 15],
+    psi: ['Assente', 'Marcato', 0, 15],
+  } },
   defaultOptions: [
     { value: 0, label: 'Sempre o spesso falso' }, { value: 1, label: 'Talvolta o abbastanza falso' },
     { value: 2, label: 'Talvolta o abbastanza vero' }, { value: 3, label: 'Sempre o spesso vero' },

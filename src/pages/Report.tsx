@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getTest } from '../db';
 import { BandBadge, fmtDate, href, toast } from '../components';
 import { allItems, computeScores, itemOptions } from '../scoring';
+import { BipolarBar, ScaleBar, StarChart, TScoreProfile, shortLabel } from '../viz';
 import { patientLabel } from '../csv';
 
 export function Report({ adminId }: { adminId: string }) {
@@ -19,6 +20,12 @@ export function Report({ adminId }: { adminId: string }) {
   const entries = allItems(test);
   const hasT = scores.some(s => s.t !== undefined);
   const needsGender = hasT && !patient.gender;
+  const viz = test.viz ?? {};
+  const showBars = test.scales.length <= 20;
+  const profilePoints = (viz.profile ?? [])
+    .map(id => scores.find(s => s.scaleId === id))
+    .filter((s): s is NonNullable<typeof s> => !!s && s.t != null)
+    .map(s => ({ label: shortLabel(s), t: s.t as number }));
 
   return (
     <>
@@ -70,12 +77,48 @@ export function Report({ adminId }: { adminId: string }) {
               {hasT && <td className="num">{s.kAdj ?? ''}</td>}
               {hasT && <td className="num"><strong>{s.t === null ? '—' : s.t ?? ''}</strong></td>}
               <td>{s.raw === null ? <span className="muted small">troppi item mancanti</span> : <BandBadge band={s.band} />}
-                {s.band?.note && <div className="small muted">{s.band.note}</div>}</td>
+                {s.band?.note && <div className="small muted">{s.band.note}</div>}
+                {(() => {
+                  const pole = viz.poles?.[s.scaleId];
+                  if (pole && s.raw !== null) {
+                    return <BipolarBar low={pole[0]} high={pole[1]} min={pole[2]} max={pole[3]} value={s.raw} />;
+                  }
+                  const sc = test.scales.find(x => x.id === s.scaleId);
+                  const v = s.t ?? s.raw;
+                  if (showBars && sc?.bands?.length && v !== null && v !== undefined) {
+                    return <div><ScaleBar bands={sc.bands} value={v} /></div>;
+                  }
+                  return null;
+                })()}</td>
               <td className="num">{s.missing}</td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {profilePoints.length >= 2 && (
+        <>
+          <h2>Profilo punti T</h2>
+          <TScoreProfile points={profilePoints} />
+        </>
+      )}
+
+      {viz.stars && (
+        <>
+          <h2>Stelle per dominio</h2>
+          <p className="small muted" style={{ maxWidth: '80ch' }}>
+            Ogni raggio è un item: la distanza dal centro è il punteggio, il colore il livello di azione. L'anello tratteggiato arancione segna la soglia di attuabilità (≥2).
+          </p>
+          <div className="stars-grid">
+            {test.sections.map(sec => (
+              <div key={sec.id} className="star-cell">
+                <strong className="small">{sec.title}</strong>
+                <StarChart def={test} section={sec} answers={admin.answers} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {test.notes && <p className="small muted" style={{ marginTop: '1rem' }}>{test.notes}</p>}
       {test.status !== 'verificato' && (

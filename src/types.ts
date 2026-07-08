@@ -89,6 +89,15 @@ export interface TestDefinition {
   notes?: string;
   /** guida estesa (somministrazione, scoring, interpretazione dal manuale), mostrata con il tasto Info */
   info?: string;
+  /** visualizzazioni grafiche nel report */
+  viz?: {
+    /** stelle radiali per sezione (stile TCOM/CANS): item come raggi, punteggio come distanza dal centro */
+    stars?: boolean;
+    /** id delle scale da tracciare nel profilo a punti T (stile MMPI) */
+    profile?: string[];
+    /** barre bipolari: scaleId → [etichetta polo basso, etichetta polo alto, min, max] */
+    poles?: Record<string, [string, string, number, number]>;
+  };
 }
 
 export type AnswerValue = number | number[] | string | null;

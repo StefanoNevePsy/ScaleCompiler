@@ -176,6 +176,16 @@ kbd {
 .guided .optgroup { flex-direction: column; align-items: stretch; gap: 0.6rem; }
 .guided .opt { font-size: 1.2rem; padding: 0.9rem 1rem; }
 
+.bipolar { max-width: 240px; margin-top: 0.35rem; }
+.bipolar .track { position: relative; height: 8px; background: linear-gradient(90deg, var(--surface-2), var(--primary-soft), var(--surface-2)); border-radius: 4px; }
+.bipolar .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--border); }
+.bipolar .marker { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid white; box-shadow: 0 0 0 1px var(--primary); transform: translate(-50%, -50%); }
+.bipolar .poles { display: flex; justify-content: space-between; font-size: 0.6875rem; margin-top: 2px; }
+.stars-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+.star-cell { text-align: center; }
+.star-cell svg { max-width: 100%; height: auto; }
+.scalebar { display: block; }
+
 /* Grafico andamento */
 .chart-wrap { overflow-x: auto; }
 .chart text { font-size: 11px; fill: var(--ink-2); }

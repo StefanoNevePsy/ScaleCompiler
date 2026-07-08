@@ -61,6 +61,10 @@ export const ecrR: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Attaccamento e relazioni'],
+  viz: { poles: {
+    ansia: ['Sicurezza sul legame', 'Ansia da abbandono', 1, 7],
+    evitamento: ['Ricerca di vicinanza', 'Evitamento dell\u2019intimità', 1, 7],
+  } },
   defaultOptions: A7,
   sections: [
     {
@@ -106,6 +110,12 @@ export const rq: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Attaccamento e relazioni'],
+  viz: { poles: {
+    sicuro: ['Non mi descrive', 'Mi descrive molto', 1, 7],
+    timoroso: ['Non mi descrive', 'Mi descrive molto', 1, 7],
+    preoccupato: ['Non mi descrive', 'Mi descrive molto', 1, 7],
+    distanziante: ['Non mi descrive', 'Mi descrive molto', 1, 7],
+  } },
   defaultOptions: A7,
   sections: [
     {

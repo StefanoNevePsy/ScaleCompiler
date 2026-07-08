@@ -27,6 +27,10 @@ export const air: TestDefinition = {
   status: 'da_verificare',
   repeatable: true,
   categories: ['Disabilità e funzionamento'],
+  viz: { poles: {
+    capacita: ['Bassa capacità', 'Alta capacità', 12, 60],
+    opportunita: ['Poche opportunità', 'Molte opportunità', 12, 60],
+  } },
   defaultOptions: O,
   sections: [
     {
