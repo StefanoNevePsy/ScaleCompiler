@@ -25,7 +25,7 @@ La cartella `dist/` può essere servita da qualsiasi web server statico, anche i
 
 ## Come si definisce un test
 
-Vedi `src/types.ts` (`TestDefinition`) e gli esempi in `src/tests/`. In sintesi: `sections[].items[]` con tipo di risposta (`likert`, `single`, `multi`, `yesno`, `number`, `text`), `scales[]` con metodo di calcolo (`sum`, `mean`, `mean10`, `count_gte`), item invertiti (`reverse`), fasce di cutoff (`bands`). I test integrati sono in `src/tests/`; quelli creati/modificati nell'app sono salvati nel database locale e prevalgono sugli integrati con lo stesso `id`.
+Vedi `src/types.ts` (`TestDefinition`) e gli esempi in `src/tests/`. In sintesi: `sections[].items[]` con tipo di risposta (`likert`, `single`, `multi`, `yesno`, `number`, `text`), `scales[]` con metodo di calcolo (`sum`, `mean`, `mean10`, `count_gte`, più `key` a chiave V/F e `pairs` a coppie per strumenti tipo MMPI-2), item invertiti (`reverse`), fasce di cutoff (`bands`), correzione K (`kFraction`) e tabelle di conversione in punti T per genere (`tscores`, richiede il sesso nella scheda paziente). I test integrati sono in `src/tests/`; quelli creati/modificati nell'app sono salvati nel database locale e prevalgono sugli integrati con lo stesso `id`.
 
 ### Stati delle definizioni
 

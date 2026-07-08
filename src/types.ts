@@ -36,12 +36,12 @@ export interface Band {
   note?: string;
 }
 
-export type Compute = 'sum' | 'mean' | 'mean10' | 'count_gte';
+export type Compute = 'sum' | 'mean' | 'mean10' | 'count_gte' | 'key' | 'pairs';
 
 export interface Scale {
   id: string;
   name: string;
-  /** id degli item inclusi; ['*'] = tutti gli item numerici del test */
+  /** id degli item inclusi; ['*'] = tutti gli item numerici del test (non usato per compute key/pairs) */
   items: string[];
   compute: Compute;
   /** soglia per count_gte (default 1) */
@@ -50,6 +50,17 @@ export interface Scale {
   bands?: Band[];
   /** n. massimo di risposte mancanti tollerate: il punteggio viene proratato (sum) o calcolato sui presenti (mean) */
   maxMissing?: number;
+  // --- scale a chiave (es. MMPI-2): raw = conteggio risposte nella direzione chiave ---
+  keyTrue?: string[]; // item che contano se risposta = 1 (Vero)
+  keyFalse?: string[]; // item che contano se risposta = 0 (Falso)
+  // --- scale a coppie (VRIN/TRIN): [item1, valore1, item2, valore2, punti] ---
+  pairs?: [string, number, string, number, number][];
+  base?: number; // punteggio di partenza (es. TRIN = 9)
+  // --- conversione in punti T (es. MMPI-2) ---
+  kFraction?: number; // correzione K: raw' = round(raw + kFraction × raw(K)); richiede una scala con id "k"
+  tscores?: { m?: (number | null)[]; f?: (number | null)[] }; // indice = punteggio grezzo (corretto), valore = T
+  /** la scala si applica solo a un genere (es. Mf maschile/femminile) */
+  gender?: 'M' | 'F';
 }
 
 export type TestStatus = 'verificato' | 'da_verificare' | 'bozza';
@@ -84,6 +95,8 @@ export interface Patient {
   code: string; // codice anonimo o sigla
   firstName?: string;
   lastName?: string;
+  /** necessario per i test con norme per genere (es. punti T MMPI-2) */
+  gender?: 'M' | 'F';
   birthDate?: string; // ISO yyyy-mm-dd
   notes?: string;
   createdAt: string;
@@ -109,4 +122,8 @@ export interface ScoreResult {
   raw: number | null; // null = non calcolabile (troppi mancanti)
   missing: number;
   band?: Band;
+  /** punteggio grezzo corretto con K (solo scale con kFraction) */
+  kAdj?: number;
+  /** punto T (solo scale con tabelle tscores); null = tabella o genere mancante */
+  t?: number | null;
 }

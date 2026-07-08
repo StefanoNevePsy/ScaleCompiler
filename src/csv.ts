@@ -23,14 +23,14 @@ export function exportScoresCsv(
   admins: Administration[], patients: Map<string, Patient>, tests: Map<string, TestDefinition>, filename: string,
 ) {
   const rows: (string | number | null)[][] = [];
-  rows.push(['paziente_codice', 'paziente_nome', 'test', 'data', 'compilante', 'scala', 'punteggio', 'fascia', 'item_mancanti', 'note']);
+  rows.push(['paziente_codice', 'paziente_nome', 'test', 'data', 'compilante', 'scala', 'punteggio', 'punteggio_K', 'punteggio_T', 'fascia', 'item_mancanti', 'note']);
   for (const a of [...admins].sort((x, y) => x.date.localeCompare(y.date))) {
     const p = patients.get(a.patientId);
     const t = tests.get(a.testId);
     if (!p || !t) continue;
-    for (const s of computeScores(t, a.answers)) {
+    for (const s of computeScores(t, a.answers, { gender: p.gender })) {
       rows.push([p.code, [p.lastName, p.firstName].filter(Boolean).join(' '), t.acronym,
-        a.date.slice(0, 10), a.respondent ?? '', s.name, s.raw, s.band?.label ?? '', s.missing, a.notes ?? '']);
+        a.date.slice(0, 10), a.respondent ?? '', s.name, s.raw, s.kAdj ?? null, s.t ?? null, s.band?.label ?? '', s.missing, a.notes ?? '']);
     }
   }
   download(filename, toCsv(rows), 'text/csv');

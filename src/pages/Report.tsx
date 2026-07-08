@@ -15,8 +15,10 @@ export function Report({ adminId }: { adminId: string }) {
   if (!admin) return <div className="empty"><strong>Somministrazione non trovata</strong></div>;
   if (!patient || !test) return null;
 
-  const scores = computeScores(test, admin.answers);
+  const scores = computeScores(test, admin.answers, { gender: patient.gender });
   const entries = allItems(test);
+  const hasT = scores.some(s => s.t !== undefined);
+  const needsGender = hasT && !patient.gender;
 
   return (
     <>
@@ -52,14 +54,21 @@ export function Report({ adminId }: { adminId: string }) {
       </div>
 
       <h2>Punteggi</h2>
+      {needsGender && (
+        <p className="callout warn small">
+          Questo test usa norme per genere: imposta il sesso del paziente nella sua scheda per calcolare i punti T.
+        </p>
+      )}
       {scores.length === 0 && <p className="muted">Questo test non definisce scale di punteggio.</p>}
       <table className="data">
-        <thead><tr><th>Scala</th><th className="num">Punteggio</th><th>Fascia interpretativa</th><th className="num">Item mancanti</th></tr></thead>
+        <thead><tr><th>Scala</th><th className="num">Grezzo</th>{hasT && <th className="num">+K</th>}{hasT && <th className="num">T</th>}<th>Fascia interpretativa</th><th className="num">Mancanti</th></tr></thead>
         <tbody>
           {scores.map(s => (
             <tr key={s.scaleId}>
               <td>{s.name}</td>
               <td className="num"><strong>{s.raw ?? 'n.c.'}</strong></td>
+              {hasT && <td className="num">{s.kAdj ?? ''}</td>}
+              {hasT && <td className="num"><strong>{s.t === null ? '—' : s.t ?? ''}</strong></td>}
               <td>{s.raw === null ? <span className="muted small">troppi item mancanti</span> : <BandBadge band={s.band} />}
                 {s.band?.note && <div className="small muted">{s.band.note}</div>}</td>
               <td className="num">{s.missing}</td>

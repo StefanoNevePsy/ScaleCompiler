@@ -12,6 +12,7 @@ export function Patients() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
 
   const patients = useLiveQuery(() => db.patients.toArray(), []) ?? [];
   const admins = useLiveQuery(() => db.administrations.toArray(), []) ?? [];
@@ -36,9 +37,10 @@ export function Patients() {
     await db.patients.add({
       id, code: code.trim(), firstName: firstName.trim() || undefined,
       lastName: lastName.trim() || undefined, birthDate: birthDate || undefined,
+      gender: (gender || undefined) as 'M' | 'F' | undefined,
       createdAt: new Date().toISOString(),
     });
-    setCode(''); setFirstName(''); setLastName(''); setBirthDate(''); setShowForm(false);
+    setCode(''); setFirstName(''); setLastName(''); setBirthDate(''); setGender(''); setShowForm(false);
     nav('p', id);
   };
 
@@ -66,6 +68,11 @@ export function Patients() {
             </label>
             <label className="field">Data di nascita
               <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+            </label>
+            <label className="field">Sesso (per norme di genere)
+              <select value={gender} onChange={e => setGender(e.target.value)}>
+                <option value="">—</option><option value="M">M</option><option value="F">F</option>
+              </select>
             </label>
             <div className="grow-0"><button className="btn-primary" onClick={add}>Crea</button></div>
           </div>

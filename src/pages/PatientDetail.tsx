@@ -33,9 +33,9 @@ export function PatientDetail({ id }: { id: string }) {
   };
 
   const summaryScore = (t: TestDefinition, a: (typeof admins)[number]) => {
-    const s = computeScores(t, a.answers)[0];
+    const s = computeScores(t, a.answers, { gender: patient.gender })[0];
     if (!s || s.raw === null) return <span className="muted">—</span>;
-    return <>{s.raw} <BandBadge band={s.band} /></>;
+    return <>{s.t != null ? `T ${s.t}` : s.raw} <BandBadge band={s.band} /></>;
   };
 
   return (
@@ -45,7 +45,12 @@ export function PatientDetail({ id }: { id: string }) {
           <h1>{patientLabel(patient)}</h1>
           <div className="sub">
             {patient.birthDate ? `Nato/a il ${fmtDate(patient.birthDate)} · ` : ''}
-            {admins.length} somministrazioni
+            Sesso:{' '}
+            <select style={{ width: 'auto', padding: '0 0.3rem', fontSize: 'inherit' }} value={patient.gender ?? ''}
+              onChange={async e => { await db.patients.update(id, { gender: (e.target.value || undefined) as 'M' | 'F' | undefined }); }}>
+              <option value="">—</option><option value="M">M</option><option value="F">F</option>
+            </select>
+            {' '}· {admins.length} somministrazioni
             {patient.archived ? ' · archiviato' : ''}
           </div>
         </div>

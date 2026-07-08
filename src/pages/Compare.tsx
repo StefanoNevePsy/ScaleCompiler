@@ -18,16 +18,16 @@ export function Compare({ patientId, testId }: { patientId: string; testId: stri
   const [scaleId, setScaleId] = useState('');
 
   const rows = useMemo(
-    () => (test ? admins.map(a => ({ a, scores: computeScores(test, a.answers) })) : []),
-    [test, admins],
+    () => (test && patient ? admins.map(a => ({ a, scores: computeScores(test, a.answers, { gender: patient.gender }) })) : []),
+    [test, admins, patient],
   );
 
   if (!patient || !test) return null;
   const scale = test.scales.find(s => s.id === scaleId) ?? test.scales[0];
   const points = scale
     ? rows.map(r => ({ date: r.a.date, score: r.scores.find(s => s.scaleId === scale.id) }))
-        .filter(p => p.score && p.score.raw !== null)
-        .map(p => ({ date: p.date, raw: p.score!.raw as number, band: p.score!.band }))
+        .filter(p => p.score && (p.score.t ?? p.score.raw) !== null && (p.score.t ?? p.score.raw) !== undefined)
+        .map(p => ({ date: p.date, raw: (p.score!.t ?? p.score!.raw) as number, band: p.score!.band }))
     : [];
 
   return (
@@ -71,7 +71,7 @@ export function Compare({ patientId, testId }: { patientId: string; testId: stri
                   const s = r.scores.find(x => x.scaleId === sc.id);
                   return (
                     <td key={r.a.id} className="num">
-                      {s?.raw ?? '—'}{' '}
+                      {s?.t != null ? `T ${s.t}` : s?.raw ?? '—'}{' '}
                       {s?.band && <BandBadge band={s.band} />}
                     </td>
                   );

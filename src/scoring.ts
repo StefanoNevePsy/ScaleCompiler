@@ -30,51 +30,97 @@ export function findBand(bands: Band[] | undefined, v: number): Band | undefined
   return bands?.find(b => v >= b.min && v <= b.max);
 }
 
-export function computeScores(def: TestDefinition, answers: Answers): ScoreResult[] {
+export interface ScoreContext {
+  gender?: 'M' | 'F';
+}
+
+export function computeScores(def: TestDefinition, answers: Answers, ctx: ScoreContext = {}): ScoreResult[] {
   const entries = allItems(def);
   const byId = new Map(entries.map(e => [e.item.id, e]));
 
-  return def.scales.map(scale => {
-    const ids = scale.items[0] === '*'
-      ? entries.filter(e => e.item.type !== 'text').map(e => e.item.id)
-      : scale.items;
-    const values: number[] = [];
-    let missing = 0;
-    for (const id of ids) {
-      const e = byId.get(id);
-      if (!e) continue;
-      const n = numericValue(def, e.section, e.item, answers[id]);
-      if (n === null) missing++;
-      else values.push(n);
-    }
-    const maxMissing = scale.maxMissing ?? 0;
-    let raw: number | null = null;
-    if (values.length > 0 && missing <= maxMissing) {
-      const sum = values.reduce((a, b) => a + b, 0);
-      switch (scale.compute) {
-        case 'sum':
-          // prorate: somma riportata al numero totale di item
-          raw = missing > 0 ? (sum / values.length) * ids.length : sum;
-          break;
-        case 'mean':
-          raw = sum / values.length;
-          break;
-        case 'mean10':
-          raw = (sum / values.length) * 10;
-          break;
-        case 'count_gte':
-          raw = values.filter(v => v >= (scale.threshold ?? 1)).length;
-          break;
+  // primo passaggio: punteggi grezzi (serve il grezzo di K prima delle scale K-corrette)
+  const results = def.scales
+    .filter(scale => !scale.gender || !ctx.gender || scale.gender === ctx.gender)
+    .map(scale => {
+      let raw: number | null = null;
+      let missing = 0;
+
+      if (scale.compute === 'key') {
+        raw = 0;
+        for (const [ids, keyed] of [[scale.keyTrue ?? [], 1], [scale.keyFalse ?? [], 0]] as const) {
+          for (const id of ids) {
+            const v = answers[id];
+            if (v === null || v === undefined || v === '') missing++;
+            else if (v === keyed) raw++;
+          }
+        }
+      } else if (scale.compute === 'pairs') {
+        raw = scale.base ?? 0;
+        for (const [a, va, b, vb, pts] of scale.pairs ?? []) {
+          if (answers[a] === undefined || answers[b] === undefined) { missing++; continue; }
+          if (answers[a] === va && answers[b] === vb) raw += pts;
+        }
+      } else {
+        const ids = scale.items[0] === '*'
+          ? entries.filter(e => e.item.type !== 'text').map(e => e.item.id)
+          : scale.items;
+        const values: number[] = [];
+        for (const id of ids) {
+          const e = byId.get(id);
+          if (!e) continue;
+          const n = numericValue(def, e.section, e.item, answers[id]);
+          if (n === null) missing++;
+          else values.push(n);
+        }
+        const maxMissing = scale.maxMissing ?? 0;
+        if (values.length > 0 && missing <= maxMissing) {
+          const sum = values.reduce((a, b) => a + b, 0);
+          switch (scale.compute) {
+            case 'sum':
+              // prorate: somma riportata al numero totale di item
+              raw = missing > 0 ? (sum / values.length) * ids.length : sum;
+              break;
+            case 'mean':
+              raw = sum / values.length;
+              break;
+            case 'mean10':
+              raw = (sum / values.length) * 10;
+              break;
+            case 'count_gte':
+              raw = values.filter(v => v >= (scale.threshold ?? 1)).length;
+              break;
+          }
+        }
       }
+
+      const decimals = scale.decimals ?? (['mean', 'mean10'].includes(scale.compute) ? 1 : 0);
+      if (raw !== null) raw = Number(raw.toFixed(decimals));
+      return { scale, raw, missing };
+    });
+
+  const kRaw = results.find(r => r.scale.id === 'k')?.raw ?? null;
+
+  return results.map(({ scale, raw, missing }) => {
+    let kAdj: number | undefined;
+    let t: number | null | undefined;
+    if (scale.tscores && raw !== null) {
+      let lookup = raw;
+      if (scale.kFraction) {
+        kAdj = kRaw !== null ? Math.floor(raw + scale.kFraction * kRaw + 0.5) : undefined;
+        lookup = kAdj ?? raw;
+      }
+      const table = ctx.gender === 'F' ? scale.tscores.f : ctx.gender === 'M' ? scale.tscores.m : (scale.tscores.m && !scale.tscores.f ? scale.tscores.m : scale.tscores.f && !scale.tscores.m ? scale.tscores.f : undefined);
+      t = table ? table[Math.max(0, Math.min(lookup, table.length - 1))] ?? null : null;
     }
-    const decimals = scale.decimals ?? (scale.compute === 'sum' || scale.compute === 'count_gte' ? 0 : 1);
-    if (raw !== null) raw = Number(raw.toFixed(decimals));
+    const bandValue = scale.tscores ? (t ?? null) : raw;
     return {
       scaleId: scale.id,
       name: scale.name,
       raw,
       missing,
-      band: raw !== null ? findBand(scale.bands, raw) : undefined,
+      kAdj,
+      t,
+      band: bandValue !== null ? findBand(scale.bands, bandValue) : undefined,
     };
   });
 }
@@ -133,10 +179,21 @@ export function validateDefinition(d: any): string[] {
   d.scales.forEach((sc: any, i: number) => {
     const where = `Scala ${i + 1} (${sc.id ?? '?'})`;
     req(typeof sc.id === 'string' && typeof sc.name === 'string', `${where}: "id" e "name" obbligatori.`);
-    req(['sum', 'mean', 'mean10', 'count_gte'].includes(sc.compute), `${where}: "compute" deve essere sum | mean | mean10 | count_gte.`);
-    req(Array.isArray(sc.items) && sc.items.length > 0, `${where}: "items" vuoto.`);
-    if (Array.isArray(sc.items) && sc.items[0] !== '*') {
-      sc.items.forEach((id: any) => req(itemIds.has(id), `${where}: item "${id}" inesistente.`));
+    req(['sum', 'mean', 'mean10', 'count_gte', 'key', 'pairs'].includes(sc.compute), `${where}: "compute" deve essere sum | mean | mean10 | count_gte | key | pairs.`);
+    if (sc.compute === 'key') {
+      const keyed = [...(sc.keyTrue ?? []), ...(sc.keyFalse ?? [])];
+      req(keyed.length > 0, `${where}: compute "key" richiede keyTrue e/o keyFalse.`);
+      keyed.forEach((id: any) => req(itemIds.has(id), `${where}: item "${id}" inesistente.`));
+    } else if (sc.compute === 'pairs') {
+      req(Array.isArray(sc.pairs) && sc.pairs.length > 0, `${where}: compute "pairs" richiede "pairs".`);
+      (sc.pairs ?? []).forEach((p: any) => {
+        req(Array.isArray(p) && p.length === 5 && itemIds.has(p[0]) && itemIds.has(p[2]), `${where}: coppia non valida (${JSON.stringify(p)}).`);
+      });
+    } else {
+      req(Array.isArray(sc.items) && sc.items.length > 0, `${where}: "items" vuoto.`);
+      if (Array.isArray(sc.items) && sc.items[0] !== '*') {
+        sc.items.forEach((id: any) => req(itemIds.has(id), `${where}: item "${id}" inesistente.`));
+      }
     }
     (sc.bands ?? []).forEach((b: any, bi: number) => {
       req(typeof b.min === 'number' && typeof b.max === 'number' && typeof b.label === 'string',

@@ -168,8 +168,8 @@ export function TestDetail({ id }: { id: string }) {
               {test.scales.map(s => (
                 <tr key={s.id}>
                   <td>{s.name}</td>
-                  <td>{{ sum: 'somma', mean: 'media', mean10: 'media × 10', count_gte: `conteggio ≥ ${s.threshold ?? 1}` }[s.compute]}</td>
-                  <td className="num">{s.items[0] === '*' ? 'tutti' : s.items.length}</td>
+                  <td>{{ sum: 'somma', mean: 'media', mean10: 'media × 10', count_gte: `conteggio ≥ ${s.threshold ?? 1}`, key: `chiave V/F${s.tscores ? ' → T' : ''}${s.kFraction ? ` (+${s.kFraction}K)` : ''}`, pairs: 'coppie di item' }[s.compute]}</td>
+                  <td className="num">{s.compute === 'key' ? (s.keyTrue?.length ?? 0) + (s.keyFalse?.length ?? 0) : s.compute === 'pairs' ? (s.pairs?.length ?? 0) : s.items[0] === '*' ? 'tutti' : s.items.length}</td>
                   <td className="small">{s.bands?.map(b => `${b.min}–${b.max} ${b.label}`).join(' · ') ?? '—'}</td>
                 </tr>
               ))}

@@ -11,6 +11,7 @@ import { aq10, asrs, snap4 } from './neuro';
 import { ecrR, rq } from './attachment';
 import { asq, audit, dast10, isi, ociR, pid5bf, psc35, scoff, whodas12 } from './misc';
 import { ari, core10, crafft, flourishing, miniIpip, mspss, ors, panas, phq4, smfq, srs, ucla3, wsas } from './extra';
+import { mmpi2 } from './mmpi2';
 
 export const builtinTests: TestDefinition[] = [
   coreOm, air, cans05, cans517, vbmapp, qbs, crm, icfAdat, wdms,
@@ -21,4 +22,5 @@ export const builtinTests: TestDefinition[] = [
   ecrR, rq,
   pid5bf, audit, dast10, isi, psc35, ociR, scoff, asq, whodas12,
   phq4, core10, wsas, mspss, ucla3, miniIpip, panas, flourishing, crafft, smfq, ari, ors, srs,
+  mmpi2,
 ];
