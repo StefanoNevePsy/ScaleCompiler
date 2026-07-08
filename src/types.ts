@@ -91,8 +91,10 @@ export interface TestDefinition {
   info?: string;
   /** visualizzazioni grafiche nel report */
   viz?: {
-    /** stelle radiali per sezione (stile TCOM/CANS): item come raggi, punteggio come distanza dal centro */
+    /** stelle radiali stile CANS/TCOM: bisogni per dominio (strati % per livello) + forze per item (invertita) */
     stars?: boolean;
+    /** id della sezione dei punti di forza (per la stella delle forze invertita) */
+    starsStrengths?: string;
     /** id delle scale da tracciare nel profilo a punti T (stile MMPI) */
     profile?: string[];
     /** barre bipolari: scaleId → [etichetta polo basso, etichetta polo alto, min, max] */

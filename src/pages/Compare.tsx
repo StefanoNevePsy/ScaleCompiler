@@ -4,6 +4,7 @@ import { db, getTest } from '../db';
 import { BandBadge, fmtDate, href } from '../components';
 import { computeScores } from '../scoring';
 import { exportItemsCsv, exportScoresCsv } from '../csv';
+import { DomainStar, StarLegend, StrengthsStar } from '../viz';
 import type { Band } from '../types';
 
 const SEV_SOFT = ['var(--sev0-soft)', 'var(--sev1-soft)', 'var(--sev2-soft)', 'var(--sev3-soft)'];
@@ -56,6 +57,40 @@ export function Compare({ patientId, testId }: { patientId: string; testId: stri
       {points.length >= 2 && scale
         ? <Chart points={points} bands={scale.bands} name={scale.name} />
         : <p className="muted">Servono almeno due somministrazioni con punteggio calcolabile per il grafico.</p>}
+
+      {test.viz?.stars && admins.length >= 2 && (() => {
+        const t0 = admins[0], t1 = admins[admins.length - 1];
+        const strengthsSec = test.sections.find(sec => sec.id === test.viz?.starsStrengths);
+        const needSections = test.sections.filter(sec => sec.id !== test.viz?.starsStrengths);
+        return (
+          <>
+            <h2>Confronto polare: prima e ultima somministrazione</h2>
+            <div className="stars-grid">
+              <div className="star-cell">
+                <DomainStar def={test} sections={needSections} answers={t0.answers} title={`T0 — ${fmtDate(t0.date)}`} />
+              </div>
+              <div className="star-cell">
+                <DomainStar def={test} sections={needSections} answers={t1.answers} title={`T1 — ${fmtDate(t1.date)}`} />
+              </div>
+            </div>
+            <StarLegend />
+            {strengthsSec && (
+              <div className="star-cell" style={{ maxWidth: 420, margin: '0 auto' }}>
+                <strong className="small">{strengthsSec.title} — T0 e T1 sovrapposti</strong>
+                <StrengthsStar def={test} section={strengthsSec} series={[
+                  { label: 'T0', answers: t0.answers, color: 'var(--ink-2)', fillOpacity: 0.3 },
+                  { label: 'T1', answers: t1.answers, color: 'var(--primary)', fillOpacity: 0.35 },
+                ]} />
+                <div className="star-legend small">
+                  <span><i style={{ background: 'var(--ink-2)' }} /> T0 — {fmtDate(t0.date)}</span>
+                  <span><i style={{ background: 'var(--primary)' }} /> T1 — {fmtDate(t1.date)}</span>
+                </div>
+                <div className="small muted">Pieno = forza utilizzabile nel piano; vuoto = forza mancante o critica.</div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       <h2>Tutti i punteggi per data</h2>
       <div className="chart-wrap">

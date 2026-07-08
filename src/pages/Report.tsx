@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getTest } from '../db';
 import { BandBadge, fmtDate, href, toast } from '../components';
 import { allItems, computeScores, itemOptions } from '../scoring';
-import { BipolarBar, ScaleBar, StarChart, TScoreProfile, shortLabel } from '../viz';
+import { BipolarBar, DomainStar, ScaleBar, StarChart, StarLegend, StrengthsStar, TScoreProfile, shortLabel } from '../viz';
 import { patientLabel } from '../csv';
 
 export function Report({ adminId }: { adminId: string }) {
@@ -103,22 +103,42 @@ export function Report({ adminId }: { adminId: string }) {
         </>
       )}
 
-      {viz.stars && (
-        <>
-          <h2>Stelle per dominio</h2>
-          <p className="small muted" style={{ maxWidth: '80ch' }}>
-            Ogni raggio è un item: la distanza dal centro è il punteggio, il colore il livello di azione. L'anello tratteggiato arancione segna la soglia di attuabilità (≥2).
-          </p>
-          <div className="stars-grid">
-            {test.sections.map(sec => (
-              <div key={sec.id} className="star-cell">
-                <strong className="small">{sec.title}</strong>
-                <StarChart def={test} section={sec} answers={admin.answers} />
+      {viz.stars && (() => {
+        const strengthsSec = test.sections.find(sec => sec.id === viz.starsStrengths);
+        const needSections = test.sections.filter(sec => sec.id !== viz.starsStrengths);
+        return (
+          <>
+            <h2>Rappresentazione polare (stelle)</h2>
+            <div className="stars-grid">
+              <div className="star-cell">
+                <strong className="small">Bisogni per dominio (% di item per livello di azione)</strong>
+                <DomainStar def={test} sections={needSections} answers={admin.answers} />
+                <StarLegend />
+                <div className="small muted">Le aree rosse/arancioni sono quelle a massima priorità di intervento.</div>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+              {strengthsSec && (
+                <div className="star-cell">
+                  <strong className="small">{strengthsSec.title}</strong>
+                  <StrengthsStar def={test} section={strengthsSec}
+                    series={[{ label: 'Attuale', answers: admin.answers, color: 'var(--primary)' }]} />
+                  <div className="small muted">Il pieno rappresenta forze positive, possibile cardine dell'intervento; il vuoto forze mancanti o critiche.</div>
+                </div>
+              )}
+            </div>
+            <details className="test-info">
+              <summary>Dettaglio per item dei domini di bisogno</summary>
+              <div className="stars-grid" style={{ background: 'var(--bg)' }}>
+                {needSections.map(sec => (
+                  <div key={sec.id} className="star-cell">
+                    <strong className="small">{sec.title}</strong>
+                    <StarChart def={test} section={sec} answers={admin.answers} />
+                  </div>
+                ))}
+              </div>
+            </details>
+          </>
+        );
+      })()}
 
       {test.notes && <p className="small muted" style={{ marginTop: '1rem' }}>{test.notes}</p>}
       {test.status !== 'verificato' && (

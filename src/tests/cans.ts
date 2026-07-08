@@ -126,7 +126,7 @@ export const cans517: TestDefinition = {
   categories: ['Età evolutiva', 'Esito e monitoraggio'],
   sections: s517,
   scales: scales(s517, 'forze'),
-  viz: { stars: true },
+  viz: { stars: true, starsStrengths: 'forze' },
   info: INFO,
   notes: NOTES,
 };
@@ -201,7 +201,7 @@ export const cans05: TestDefinition = {
   categories: ['Età evolutiva', 'Esito e monitoraggio'],
   sections: s05,
   scales: scales(s05, 'forze'),
-  viz: { stars: true },
+  viz: { stars: true, starsStrengths: 'forze' },
   info: INFO,
   notes: NOTES,
 };

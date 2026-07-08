@@ -105,6 +105,155 @@ export function StarChart({ def, section, answers }: { def: TestDefinition; sect
   );
 }
 
+// ---------- Stelle CANS (rappresentazione polare come in letteratura TCOM) ----------
+
+const wrap2 = (s: string): [string, string?] => {
+  if (s.length <= 16) return [s];
+  const mid = Math.floor(s.length / 2);
+  let cut = -1;
+  for (let d = 0; d < mid; d++) {
+    if (s[mid - d] === ' ') { cut = mid - d; break; }
+    if (s[mid + d] === ' ') { cut = mid + d; break; }
+  }
+  if (cut === -1) return [s.slice(0, 16) + '…'];
+  const trim = (l: string) => (l.length > 15 ? l.slice(0, 14) + '…' : l);
+  return [trim(s.slice(0, cut)), trim(s.slice(cut + 1))];
+};
+
+export function StarLegend() {
+  return (
+    <div className="star-legend small">
+      {[0, 1, 2, 3].map(l => (
+        <span key={l}><i style={{ background: SEV[l] }} /> {l}{l === 0 ? ' — nessun bisogno' : l === 3 ? ' — azione immediata' : ''}</span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Stella dei bisogni per dominio: un raggio per sezione, strati cumulativi = % di item
+ * al livello di azione (rosso all'esterno = massima priorità), come nella rappresentazione
+ * polare CANS in letteratura.
+ */
+export function DomainStar({ def, sections, answers, title }: {
+  def: TestDefinition; sections: Section[]; answers: Record<string, unknown>; title?: string;
+}) {
+  const doms = sections.map(sec => {
+    const items = sec.items.filter(i => i.type !== 'text');
+    const maxVal = Math.max(...items.flatMap(i => itemOptions(def, sec, i).map(o => o.value)), 1);
+    const vals = items.map(i => answers[i.id]).filter((v): v is number => typeof v === 'number');
+    // frazione cumulata di item con punteggio ≤ l
+    const fracLe = (l: number) => (vals.length ? vals.filter(v => v <= l).length / vals.length : 0);
+    return { title: sec.title, maxVal, levels: [fracLe(0), fracLe(1), fracLe(2)], answered: vals.length };
+  }).filter(d => d.answered > 0);
+  const n = doms.length;
+  if (n < 3) return null;
+
+  const SIZE = 380, C = SIZE / 2, RMAX = SIZE / 2 - 86;
+  const ang = (i: number) => (i / n) * 2 * Math.PI - Math.PI / 2;
+  const pt = (i: number, frac: number): [number, number] =>
+    [C + frac * RMAX * Math.cos(ang(i)), C + frac * RMAX * Math.sin(ang(i))];
+  const poly = (fracs: number[]) => fracs.map((f, i) => pt(i, f).join(',')).join(' ');
+
+  return (
+    <svg className="star" viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} role="img" aria-label={`Stella bisogni ${title ?? ''}`}>
+      {title && <text x={C} y={16} textAnchor="middle" fontSize={13} fontWeight={650} fill="var(--ink)">{title}</text>}
+      {/* strati: 100% (livello 3) → ≤2 → ≤1 → ≤0 */}
+      <polygon points={poly(doms.map(() => 1))} fill={SEV[3]} stroke="white" strokeWidth={1} />
+      <polygon points={poly(doms.map(d => d.levels[2]))} fill={SEV[2]} stroke="white" strokeWidth={1} />
+      <polygon points={poly(doms.map(d => d.levels[1]))} fill={SEV[1]} stroke="white" strokeWidth={1} />
+      <polygon points={poly(doms.map(d => d.levels[0]))} fill={SEV[0]} stroke="white" strokeWidth={1} />
+      {/* griglia radiale sopra gli strati */}
+      {[0.2, 0.4, 0.6, 0.8, 1].map(f => (
+        <polygon key={f} points={poly(doms.map(() => f))} fill="none" stroke="white" strokeOpacity={0.55} strokeWidth={0.75} strokeDasharray="3 3" />
+      ))}
+      {doms.map((_, i) => {
+        const [x2, y2] = pt(i, 1);
+        return <line key={i} x1={C} y1={C} x2={x2} y2={y2} stroke="white" strokeOpacity={0.7} strokeWidth={0.75} />;
+      })}
+      {/* asse percentuale */}
+      {[20, 40, 60, 80, 100].map(p => (
+        <text key={p} x={C + 4} y={C - (p / 100) * RMAX + 3} fontSize={8.5} fill="var(--ink-2)">{p}</text>
+      ))}
+      {/* etichette dominio */}
+      {doms.map((d, i) => {
+        const a = ang(i);
+        const [x, y] = pt(i, 1.13);
+        const anchor = Math.cos(a) > 0.3 ? 'start' : Math.cos(a) < -0.3 ? 'end' : 'middle';
+        const lines = wrap2(d.title);
+        return (
+          <text key={i} x={x} y={y + (Math.sin(a) > 0.5 ? 10 : Math.sin(a) < -0.5 ? -6 : 0)} textAnchor={anchor}
+            fontSize={10.5} fontWeight={600} fill="var(--ink)">
+            {lines.map((ln, k) => <tspan key={k} x={x} dy={k === 0 ? 0 : 12}>{ln}</tspan>)}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
+/**
+ * Stella dei punti di forza (per item, INVERTITA): pieno = forza presente e utilizzabile
+ * come cardine dell'intervento, vuoto = forza mancante o critica. Supporta il confronto
+ * sovrapposto di più somministrazioni (T0, T1…).
+ */
+export function StrengthsStar({ def, section, series }: {
+  def: TestDefinition; section: Section;
+  series: { label: string; answers: Record<string, unknown>; color: string; fillOpacity?: number }[];
+}) {
+  const items = section.items.filter(i => i.type !== 'text');
+  const n = items.length;
+  if (n < 3) return null;
+  const maxVal = Math.max(...items.flatMap(i => itemOptions(def, section, i).map(o => o.value)), 1);
+  const SIZE = 380, C = SIZE / 2, RMAX = SIZE / 2 - 86;
+  const ang = (i: number) => (i / n) * 2 * Math.PI - Math.PI / 2;
+  const pt = (i: number, frac: number): [number, number] =>
+    [C + frac * RMAX * Math.cos(ang(i)), C + frac * RMAX * Math.sin(ang(i))];
+  const strength = (answers: Record<string, unknown>, id: string) => {
+    const v = answers[id];
+    return typeof v === 'number' ? (maxVal - v) / maxVal : 0; // invertita: 0 (forza centrale) → raggio pieno
+  };
+
+  return (
+    <svg className="star" viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} role="img" aria-label="Stella dei punti di forza">
+      {/* griglia */}
+      {[1 / 3, 2 / 3, 1].map(f => (
+        <polygon key={f} points={items.map((_, i) => pt(i, f).join(',')).join(' ')}
+          fill="none" stroke="var(--border)" strokeWidth={0.9} strokeDasharray={f === 1 ? undefined : '3 3'} />
+      ))}
+      {items.map((_, i) => {
+        const [x2, y2] = pt(i, 1);
+        return <line key={i} x1={C} y1={C} x2={x2} y2={y2} stroke="var(--border)" strokeWidth={0.6} />;
+      })}
+      {[1, 2, 3].map(l => (
+        <text key={l} x={C + 4} y={C - (l / maxVal) * RMAX + 3} fontSize={8.5} fill="var(--ink-2)">{l}</text>
+      ))}
+      {/* serie sovrapposte */}
+      {series.map((s, k) => (
+        <polygon key={k}
+          points={items.map((it, i) => pt(i, strength(s.answers, it.id)).join(',')).join(' ')}
+          fill={s.color} fillOpacity={s.fillOpacity ?? 0.35} stroke={s.color} strokeWidth={2} strokeLinejoin="round" />
+      ))}
+      {series.length === 1 && items.map((it, i) => {
+        const f = strength(series[0].answers, it.id);
+        const [cx, cy] = pt(i, f);
+        return <circle key={it.id} cx={cx} cy={cy} r={3.5} fill={series[0].color} stroke="white" strokeWidth={1.2}>
+          <title>{it.text}</title>
+        </circle>;
+      })}
+      {/* etichette item */}
+      {items.map((it, i) => {
+        const a = ang(i);
+        const [x, y] = pt(i, 1.13);
+        const anchor = Math.cos(a) > 0.3 ? 'start' : Math.cos(a) < -0.3 ? 'end' : 'middle';
+        const label = it.text.length > 15 ? it.text.slice(0, 14) + '…' : it.text;
+        return <text key={it.id} x={x} y={y + (Math.sin(a) > 0.5 ? 8 : Math.sin(a) < -0.5 ? -2 : 3)}
+          textAnchor={anchor} fontSize={10} fill="var(--ink)">{label}</text>;
+      })}
+    </svg>
+  );
+}
+
 /** Profilo a punti T stile MMPI: scale sull'asse X, T sull'asse Y, linee di riferimento a 50 e 65. */
 export function TScoreProfile({ points }: { points: { label: string; t: number }[] }) {
   if (points.length < 2) return null;
